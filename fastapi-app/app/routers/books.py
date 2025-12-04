@@ -34,6 +34,7 @@ async def list_books(title: str | None = None, author:str | None = None, db: Asy
     if title:
         query = query.where(Book.title.ilike(f"%{title}%"))
 
+    #Apply filter if title provided
     if author:
         query = query.where(Book.author.ilike(f"%{author}%"))
 

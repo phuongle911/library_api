@@ -27,8 +27,18 @@ async def get_book(book_id: int, db: AsyncSession = Depends(get_db)):
    return books
 
 @book_router.get("/books", response_model=list[BookResponse])
-async def list_books(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Book))
+async def list_books(title: str | None = None, author:str | None = None, db: AsyncSession = Depends(get_db)):
+    query = select(Book)
+
+    #Apply filter if title provided
+    if title:
+        query = query.where(Book.title.ilike(f"%{title}%"))
+
+    if author:
+        query = query.where(Book.author.ilike(f"%{author}%"))
+
+
+    result = await db.execute(query)
     books = result.scalars().all()
     if not books:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No book title")

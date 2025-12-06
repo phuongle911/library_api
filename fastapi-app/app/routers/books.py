@@ -52,10 +52,10 @@ async def update_book(book_id: int, payload: BookUpdate, db: AsyncSession = Depe
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
     for key, value in payload.model_dump().items():
         setattr(book, key, value)
-        db.add(book)
-        await db.commit()
-        await db.refresh(book)
-        return book
+    db.add(book)
+    await db.commit()
+    await db.refresh(book)
+    return book
     
 @book_router.delete("/books/{book_id}")
 async def delete_book(book_id: int, db: AsyncSession = Depends(get_db)):

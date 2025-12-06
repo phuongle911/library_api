@@ -1,3 +1,4 @@
 env/
 fastapi-app/app/routers/__pycache__/
+fastapi-app/app/models/__pycache__/
 app.db

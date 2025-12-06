@@ -20,8 +20,35 @@ async def create_user(payload: UserCreate, db: AsyncSession = Depends(get_db)):
    return user
 
 @user_router.get("/users/", response_model=list[UserResponse])
-async def list_users(db: AsyncSession = Depends(get_db)):
-   result = await db.execute(select(User))
+async def list_users(
+   name: str | None = None, 
+   email: str | None = None, 
+   sort_by: str | None = None,
+   db: AsyncSession = Depends(get_db)
+   ):
+   
+   query = select(User)
+
+   #Apply fliter name if provided
+   if name:
+      query = query.where(User.name.ilike(f"%{name}%"))
+
+   #Apply filter email if provided
+   if email:
+      query = query.where(User.email.ilike(f"%{email}%"))
+
+   #Apply sort_by 
+   if sort_by == "name":
+      query = query.order_by(User.name)
+   elif sort_by == "email":
+      query = query.order_by(User.email)
+   elif sort_by == "oldest":
+      query = query.order_by(User.id.asc())
+   elif sort_by == "newest":
+      query = query.order_by(User.id.desc())
+
+   
+   result = await db.execute(query)
    users = result.scalars().all()
    if not users:
       raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No user found")

@@ -27,7 +27,12 @@ async def get_book(book_id: int, db: AsyncSession = Depends(get_db)):
    return books
 
 @book_router.get("/books", response_model=list[BookResponse])
-async def list_books(title: str | None = None, author:str | None = None, db: AsyncSession = Depends(get_db)):
+async def list_books(
+    title: str | None = None,
+    author:str | None = None, 
+    sort_by: str | None = None,
+    db: AsyncSession = Depends(get_db)
+    ):
     query = select(Book)
 
     #Apply filter if title provided
@@ -38,6 +43,15 @@ async def list_books(title: str | None = None, author:str | None = None, db: Asy
     if author:
         query = query.where(Book.author.ilike(f"%{author}%"))
 
+    #Apply sort_by for title
+    if sort_by == "title":
+        query = query.order_by(Book.title)
+    elif sort_by == "author":
+        query = query.order_by(Book.author)
+    elif sort_by == "newest":
+        query = query.order_by(Book.id.desc())
+    elif sort_by == "oldest":
+        query = query.order_by(Book.id.asc())
 
     result = await db.execute(query)
     books = result.scalars().all()

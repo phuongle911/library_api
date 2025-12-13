@@ -1,14 +1,14 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.schemas.books import BookCreate, BookUpdate, BookResponse
-from app.core.database import get_db
+from fastapi import APIRouter, Depends  #API library
+from sqlalchemy.ext.asyncio import AsyncSession  #database library
+from app.schemas.books import BookCreate, BookUpdate, BookResponse  #schemas/DTO layer
+from app.core.database import get_db  #DB/engine layer
 from app.services.book_service import (
     create_book_service,
     get_book_service,
     list_books_service,
     update_book_service,
     delete_book_service
-    )
+    )  #service layer
 
 book_router = APIRouter()
 

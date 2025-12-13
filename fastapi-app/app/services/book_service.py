@@ -1,10 +1,10 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from fastapi import Depends
-from fastapi import HTTPException, status
-from app.schemas.books import BookCreate, BookUpdate
-from app.models.books import Book
-from app.core.database import get_db
+from sqlalchemy.ext.asyncio import AsyncSession  #database library
+from sqlalchemy.future import select  #database library
+from fastapi import Depends  #API library
+from fastapi import HTTPException, status  #API library
+from app.schemas.books import BookCreate, BookUpdate  #schemas/DTO layer
+from app.models.books import Book  #models/ORM layer
+from app.core.database import get_db  #DB/engine layer  
 
 async def create_book_service(db: AsyncSession, payload: BookCreate) -> Book:
    result = await db.execute(select(Book).where(Book.title == payload.title))

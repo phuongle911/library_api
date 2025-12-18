@@ -1,14 +1,16 @@
 from pydantic import BaseModel, EmailStr, Field
+from typing import Optional
+
+# class UserBase(BaseModel):
+#     name: str = Field(..., min_length=2, max_length=50)
+#     email: EmailStr
+#     #password: str
 
 
-class UserBase(BaseModel):
+class UserCreate(BaseModel):
+    password: str | None = Field(None, min_length=6, max_length=80)
     name: str = Field(..., min_length=2, max_length=50)
     email: EmailStr
-    #password: str
-
-
-class UserCreate(UserBase):
-    password: str | None = Field(None, min_length=6, max_length=80)
 
 
 class UserUpdate(BaseModel):
@@ -17,11 +19,13 @@ class UserUpdate(BaseModel):
     password: str | None = Field(None, min_length=6, max_length=80)
 
 
-class UserResponse(UserBase):
+class UserResponse(BaseModel):
     id: int
+    name: Optional[str] = None
+    email: EmailStr
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserLogin(BaseModel):

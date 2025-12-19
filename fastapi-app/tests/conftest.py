@@ -1,15 +1,15 @@
 import pytest
 from httpx import AsyncClient
-import sys
-import os
+from httpx import ASGITransport
 
-sys.path.append(os.path.abspath("."))
 from app.main import app
 
 @pytest.fixture
 async def client():
+    transport = ASGITransport(app=app)
+    
     async with AsyncClient(
-        app=app,
+        transport=transport,
         base_url="http://test",
         ) as ac: 
         yield ac

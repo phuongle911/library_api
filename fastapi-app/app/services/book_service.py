@@ -5,7 +5,11 @@ from fastapi import HTTPException, status  #API library
 from app.schemas.books import BookCreate, BookUpdate  #schemas/DTO layer
 from app.models.books import Book  #models/ORM layer
 from app.core.database import get_db  #DB/engine layer  
+from functools import lru_cache  #caching library
 
+@lru_cache(maxsize=128)
+def _cached_list_books(title: str | None, author: str | None, sort_by: str | None):
+    return (title, author, sort_by)
 async def create_book_service(db: AsyncSession, payload: BookCreate) -> Book:
    result = await db.execute(select(Book).where(Book.title == payload.title))
    existing_book = result.scalar_one_or_none()
@@ -29,6 +33,7 @@ async def list_books_service(
     author:str | None = None, 
     sort_by: str | None = None
     ) -> Book:
+    _cached_list_books(title, author, sort_by)
     query = select(Book)
 
     #Apply filter if title provided
@@ -48,6 +53,7 @@ async def list_books_service(
         query = query.order_by(Book.id.desc())
     elif sort_by == "oldest":
         query = query.order_by(Book.id.asc())
+    print("HITTING DATABASE")
 
     result = await db.execute(query)
     books = result.scalars().all()

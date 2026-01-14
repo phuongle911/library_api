@@ -20,7 +20,7 @@ user_router = APIRouter()
 #    await db.refresh(user)
 #    return user
 
-@user_router.get("/users/", response_model=list[UserResponse])
+@user_router.get("/users/", response_model=list[UserResponse], status_code=200)
 async def list_users(
    name: str | None = None, 
    email: str | None = None, 
@@ -65,7 +65,7 @@ async def list_users(
 #       raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 #    return users
 
-@user_router.get("/users/{user_id}", response_model=UserResponse)
+@user_router.get("/users/{user_id}", response_model=UserResponse, status_code=200)
 async def get_user(
    user_id: int,
    db: AsyncSession = Depends(get_db),
@@ -76,7 +76,7 @@ async def get_user(
       raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
    return user
 
-@user_router.put("/users/{user_id}", response_model=UserResponse)
+@user_router.put("/users/{user_id}", response_model=UserResponse, status_code=200)
 async def update_user(user_id: int, payload: UserUpdate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
    user = await db.get(User, user_id)
    if not user:
@@ -90,7 +90,7 @@ async def update_user(user_id: int, payload: UserUpdate, db: AsyncSession = Depe
       await db.refresh(user)
       return user
    
-@user_router.delete("/users/{user_id}")
+@user_router.delete("/users/{user_id}", status_code=204)
 async def delete_user(user_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
    user = await db.get(User, user_id)
    if not user:

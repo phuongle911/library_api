@@ -31,6 +31,7 @@ def get_books_list_cache(title:str | None, author:str |None, sort_by:str | None)
     
     return value
 
+
 def set_books_list_cache(
         title: str | None,
         author: str | None,
@@ -40,6 +41,7 @@ def set_books_list_cache(
 ):
     key = _books_list_key(title, author, sort_by)
     _BOOKS_LIST_CACHE[key] = (time.time() + ttl_seconds, value)
+
 
 def invalidate_books_list_cache():
     _BOOKS_LIST_CACHE.clear()

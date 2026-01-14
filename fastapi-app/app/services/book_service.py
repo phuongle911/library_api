@@ -6,6 +6,11 @@ from app.schemas.books import BookCreate, BookUpdate  #schemas/DTO layer
 from app.models.books import Book  #models/ORM layer
 from app.core.database import get_db  #DB/engine layer  
 from functools import lru_cache  #caching library
+from app.core.cache import(
+    get_books_list_cache,
+    set_books_list_cache,
+    invalidate_books_list_cache,
+)
 
 @lru_cache(maxsize=128)
 def _cached_list_books(title: str | None, author: str | None, sort_by: str | None):
@@ -33,7 +38,9 @@ async def list_books_service(
     author:str | None = None, 
     sort_by: str | None = None
     ) -> Book:
-    _cached_list_books(title, author, sort_by)
+    cached = get_books_list_cache(title, author, sort_by)
+    if cached is not None:
+        return cached
     query = select(Book)
 
     #Apply filter if title provided
@@ -59,6 +66,7 @@ async def list_books_service(
     books = result.scalars().all()
     if not books:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No book title")
+    set_books_list_cache(title, author, sort_by, books)
     return books
 
 async def update_book_service(db: AsyncSession, book_id: int, payload: BookUpdate) -> Book:

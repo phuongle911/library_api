@@ -31,3 +31,7 @@ class UserResponse(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str | None = Field(None, min_length=6, max_length=80)
+
+
+class RefreshTokenSchema(BaseModel):
+    refresh_token: str

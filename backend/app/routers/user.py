@@ -5,6 +5,7 @@ from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate, UserResponse
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
+from app.core.permissions import require_active_user
 
 user_router = APIRouter()
 
@@ -19,6 +20,12 @@ user_router = APIRouter()
 #    await db.commit()
 #    await db.refresh(user)
 #    return user
+
+
+@user_router.get("/me")
+async def me (current_user: User = Depends(require_active_user)):
+   return {"id": current_user.id, "email": current_user.email, "role": current_user.role}
+
 
 @user_router.get("/users/", response_model=list[UserResponse], status_code=200)
 async def list_users(
@@ -95,7 +102,7 @@ async def delete_user(user_id: int, db: AsyncSession = Depends(get_db), current_
    user = await db.get(User, user_id)
    if not user:
       raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-   if user_id != current_user.id:
+   if current_user.role != "admin" and user_id != current_user.id:
       raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this user")
    await db.delete(user)
    await db.commit()

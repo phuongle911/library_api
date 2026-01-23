@@ -25,6 +25,10 @@ class BookUpdate(BaseModel):
 
 class BookResponse(BookBase):
     id: int
+    owner_id: int
+    title: str
+    author: str
+    description: str | None = None
 
 
     class Config:

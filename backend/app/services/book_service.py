@@ -4,6 +4,7 @@ from fastapi import HTTPException, status  #API library
 from app.schemas.books import BookCreate, BookUpdate  #schemas/DTO layer
 from app.models.books import Book  #models/ORM layer
 from app.models.user import User  #models/ORM layer
+from app.DAO.books_dao import BooksDAO
 from functools import lru_cache  #caching library
 from app.core.cache import(
     get_books_list_cache,
@@ -45,45 +46,17 @@ async def get_book_service(book_id: int, db: AsyncSession) -> Book:
 
 async def list_books_service(
     db: AsyncSession,
+    current_user: User,
     title: str | None = None,
-    author:str | None = None, 
-    sort_by: str | None = None
-    ) -> Book:
-    try:
-            cached = get_books_list_cache(title, author, sort_by)
-            if cached is not None:
-                return cached
-            query = select(Book)
-
-            #Apply filter if title provided
-            if title:
-                query = query.where(Book.title.ilike(f"%{title}%"))
-
-            #Apply filter if title provided
-            if author:
-                query = query.where(Book.author.ilike(f"%{author}%"))
-
-            #Apply sort_by for title
-            if sort_by == "title":
-                query = query.order_by(Book.title)
-            elif sort_by == "author":
-                query = query.order_by(Book.author)
-            elif sort_by == "newest":
-                query = query.order_by(Book.id.desc())
-            elif sort_by == "oldest":
-                query = query.order_by(Book.id.asc())
-            print("HITTING DATABASE")
-
-            result = await db.execute(query)
-            books = result.scalars().all()
-            if not books:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No book title")
-            set_books_list_cache(title, author, sort_by, books)
-            return books
-    except Exception as e:
-        print(f"errors from get list books {e}")
-        return e    
-
+    author: str | None = None,
+    sort_by: str | None = None,
+):
+    cached = get_books_list_cache(current_user.id, title, author, sort_by)
+    if cached is not None:
+      return cached
+    books = await BooksDAO.list_by_owner(db, owner_id=current_user.id, title=title, author=author, sort_by=sort_by)
+    set_books_list_cache(current_user.id, title, author, sort_by, books)
+    return books
 
 async def update_book_service(db: AsyncSession, book_id: int, payload: BookUpdate, current_user:User) -> Book:
     try:

@@ -33,7 +33,7 @@ async def list_books(
     author: str | None = None,
     sort_by: str | None = None
 ):
-    return await list_books_service(db=db, title=title, author=author, sort_by=sort_by)
+    return await list_books_service(db=db, current_user=current_user,title=title, author=author, sort_by=sort_by)
 
 
 @book_router.put("/books/{book_id}", response_model=BookResponse, status_code=200)

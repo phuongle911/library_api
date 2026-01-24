@@ -16,30 +16,34 @@ class BooksDAO:
         return result.scalar_one_or_none()
     
     @staticmethod
-    async def list(
+    async def list_by_owner(
         db: AsyncSession,
+        owner_id: int | None =None,
         title: str | None = None,
         author: str | None = None,
         sort_by:str | None = None,
     ) -> list[Book]:
         print("DAO list() called")
         
-        query = select(Book)
+        query = select(Book).where(Book.owner_id == owner_id)
 
         if title:
-            query = query.where(Book.tilte.ilike(f"%{author}%"))
-            
-            if sort_by == "title":
-                query = query.order_by(Book.title)
-            elif sort_by == "author":
-                query = query.order_by(Book.author)
-            elif sort_by == "newest":
-                query = query.order_by(Book.id.desc())
-            elif sort_by == "oldest":
-                query = query.order_by(Book.id.asc())
+            query = query.where(Book.title.ilike(f"%{title}%"))
 
-                result = await db.execute(query)
-                return result.scalars().all()
+        if author:
+            query = query.where(Book.author.ilke(f"%{author}%%"))
+            
+        if sort_by == "title":
+            query = query.order_by(Book.title)
+        elif sort_by == "author":
+            query = query.order_by(Book.author)
+        elif sort_by == "newest":
+            query = query.order_by(Book.id.desc())
+        elif sort_by == "oldest":
+            query = query.order_by(Book.id.asc())
+
+        result = await db.execute(query)
+        return result.scalars().all()
             
     @staticmethod
     async def create(db: AsyncSession, payload:BookCreate, owner_id:int) -> Book:

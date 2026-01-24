@@ -46,22 +46,17 @@ async def get_book_service(book_id: int, db: AsyncSession) -> Book:
 
 async def list_books_service(
     db: AsyncSession,
+    current_user: User,
     title: str | None = None,
-    author:str | None = None, 
-    sort_by: str | None = None
-    ):
-     cached = get_books_list_cache(title, author, sort_by)
-     if cached is not None:
-          return cached
-     
-     print("HITTING DATABASE (SERVICE)")
-     books = await BooksDAO.list(db, title=title, author=author, sort_by=sort_by)
-
-     if not books:
-          raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No book title")
-     set_books_list_cache(title, author, sort_by, books)
-     return books
-     
+    author: str | None = None,
+    sort_by: str | None = None,
+):
+    cached = get_books_list_cache(current_user.id, title, author, sort_by)
+    if cached is not None:
+      return cached
+    books = await BooksDAO.list_by_owner(db, owner_id=current_user.id, title=title, author=author, sort_by=sort_by)
+    set_books_list_cache(current_user.id, title, author, sort_by, books)
+    return books
 
 async def update_book_service(db: AsyncSession, book_id: int, payload: BookUpdate, current_user:User) -> Book:
     try:

@@ -17,7 +17,6 @@ class BookCreate(BookBase):
         return v
 
 
-
 class BookUpdate(BaseModel):
     title: str = Field(..., min_length=2, max_lenght=50)
     description: str = Field(..., min_length=2, max_lenght=200)

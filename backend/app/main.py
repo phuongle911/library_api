@@ -5,12 +5,14 @@ from app.core.database import engine, Base
 from app.routers.user import user_router
 from app.routers.books import book_router
 from app.routers.auth import auth_router
+from app.routers.library import library_router
 
 
 app = FastAPI(title="My FastAPI App")
 app.include_router(user_router, prefix="/api/v1")
 app.include_router(book_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(library_router, prefix="/api/v1")
 
 @app.on_event("startup")
 async def on_startup():

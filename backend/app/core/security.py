@@ -1,13 +1,15 @@
 from passlib.context import CryptContext
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from jose import jwt
 from fastapi import HTTPException, status
+import hashlib
 
 pwd_context = CryptContext(
     schemes=["bcrypt_sha256", "bcrypt"], 
              deprecated="auto",
              )
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
+REFRESH_TOKEN_EXPIRE_DAYS = 7
 ALGORITHM = "HS256"
 SECRET_KEY = "super-secrett-key"
 
@@ -38,3 +40,11 @@ def decode_token(token: str) -> dict:
         return payload
     except jwt.JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")  
+    
+
+def hash_refresh_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def refresh_token_expires_at() -> datetime:
+    return datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)

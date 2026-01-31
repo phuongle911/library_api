@@ -1,9 +1,20 @@
-from fastapi import APIRouter, Depends
+from datetime import datetime, timezone
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.schemas.user import UserCreate, UserLogin, RefreshTokenSchema
 from app.core.security import create_access_token, decode_token
 from app.services.auth_serivice import user_login, user_signup
+
+from app.core.security import (
+  create_access_token,
+  create_refresh_token,
+  hash_refresh_token,
+  refresh_token_expires_at,
+)
+from app.DAO.refresh_token_dao import create_refresh_token_row, get_refresh_token_by_hash
+from app.models.user import User
+from sqlalchemy import select
 
 auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -15,14 +26,49 @@ async def signup(payload: UserCreate, db: AsyncSession=Depends(get_db)):
 
 
 @auth_router.post("/login")
-async def login(payload: UserLogin, db: AsyncSession=Depends(get_db)):
-    token = await user_login(db, payload.email, payload.password)
-    return {"access_token": token,
-            "token_type": "bearer"}
+async def login(payload: UserLogin, db: AsyncSession = Depends(get_db)):
+    email = await user_login(db, payload.email, payload.password)
+    # fetch user to get user_id
+    res = await db.execute(select(User).where(User.email == email))
+    user = res.scalar_one()
+    access_token = create_access_token({"sub": email})
+    refresh_token = create_refresh_token({"sub": email})
+    await create_refresh_token_row(
+        db=db,
+        user_id=user.id,
+        token_hash=hash_refresh_token(refresh_token),
+        expires_at=refresh_token_expires_at(),
+    )
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+    }
 
 
 @auth_router.post("/login/refresh")
-async def refresh(payload: RefreshTokenSchema):
-    email = decode_token(payload.refresh_token)["sub"]
+async def refresh(
+    payload: RefreshTokenSchema,
+    db: AsyncSession = Depends(get_db)
+    ):
+    
+    token = payload.refresh_token
+    decoded = decode_token(token)
+    if decoded.get("type") != "refresh":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
+    
+    token_hash = hash_refresh_token(token)
+    row = await get_refresh_token_by_hash(db, token_hash)
+    if not row:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid refresh token")
+    
+    if row.revoked_at is not None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    
+    if row.expires_at <= datetime.now(timezone.utc):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token expired")
+    
+    email = decoded["sub"]
     access_token = create_access_token({"sub": email})
+    
     return {"access_token": access_token, "token_type": "bearer"}

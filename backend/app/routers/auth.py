@@ -12,7 +12,7 @@ from app.core.security import (
   hash_refresh_token,
   refresh_token_expires_at,
 )
-from app.DAO.refresh_token_dao import create_refresh_token_row, get_refresh_token_by_hash
+from app.DAO.refresh_token_dao import create_refresh_token_row, get_refresh_token_by_hash, revoke_refresh_token
 from app.models.user import User
 from sqlalchemy import select
 
@@ -72,3 +72,15 @@ async def refresh(
     access_token = create_access_token({"sub": email})
     
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@auth_router.post("/logout")
+async def logout(payload: RefreshTokenSchema, db: AsyncSession = Depends(get_db)):
+    token_hash = hash_refresh_token(payload.refresh_token)
+    row = await get_refresh_token_by_hash(db, token_hash)
+    if not row:
+        return {"message": "Already logged out"}
+    
+    if row.revoked_at is None:
+        await revoke_refresh_token(db, token_hash)
+        return {"message": "Logged out successfully"}

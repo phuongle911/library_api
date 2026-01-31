@@ -14,7 +14,7 @@ import math
 async def create_book_service(db: AsyncSession, payload: BookCreate, current_user: User) -> Book:
     try:
         result = await db.execute(select(Book).where(Book.title == payload.title))
-        existing_book = result.scalar_one_or_none()
+        existing_book = result.scalars().first()
         if existing_book:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Title already use")
         book = Book(**payload.model_dump(), owner_id=current_user.id)

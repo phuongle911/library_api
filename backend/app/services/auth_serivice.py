@@ -10,7 +10,7 @@ async def user_signup(db: AsyncSession, email: str, password: str):
     existing_email = result.scalar_one_or_none()
     if existing_email:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exist")
-    user = User(email=email, hashed_password=password)
+    user = User(email=email, hashed_password=hash_password(password))
     db.add(user)
     await db.commit()
     await db.refresh(user)

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models.user import User
@@ -6,6 +6,8 @@ from app.schemas.user import UserCreate, UserUpdate, UserResponse
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.core.permissions import require_active_user
+from app.core.decorator.auth import require_auth
+from app.core.decorator.logging import log_route
 
 user_router = APIRouter()
 
@@ -23,8 +25,10 @@ user_router = APIRouter()
 
 
 @user_router.get("/me")
-async def me (current_user: User = Depends(require_active_user)):
-   return {"id": current_user.id, "email": current_user.email, "role": current_user.role}
+@log_route
+@require_auth
+async def me(request: Request):
+   return {"user": request.state.user}
 
 
 @user_router.get("/users/", response_model=list[UserResponse], status_code=200)

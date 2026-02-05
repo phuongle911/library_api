@@ -1,7 +1,9 @@
 from sqlalchemy import select, func, asc, desc
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import OperationalError
 from app.models.books import Book
 from app.schemas.books import BookCreate, BookUpdate
+from app.core.decorator.retry import retry_async
 
 class BooksDAO:
     
@@ -9,11 +11,14 @@ class BooksDAO:
     async def get_by_id(db: AsyncSession, book_id: int) -> Book | None:
         return await db.get(Book, book_id)
     
+
     @staticmethod
     async def get_by_title(db: AsyncSession, title: str) -> Book | None:
         result = await db.execute(select(Book).where(Book.title == title))
         return result.scalar_one_or_none()
     
+
+    @retry_async(attempts=3, delay_seconds=0.2, exceptions=(OperationalError,))
     @staticmethod
     async def list_by_owner_paginated(
         db: AsyncSession,
@@ -52,6 +57,8 @@ class BooksDAO:
         items = result.scalars().all()
         return items, total
     
+
+    @retry_async(attempts=3, delay_seconds=0.2, exceptions=(OperationalError,))
     @staticmethod
     async def list_by_owner(
         db: AsyncSession,
@@ -77,6 +84,7 @@ class BooksDAO:
         result = await db.execute(query)
         return result.scalars().all()
     
+
     @staticmethod
     async def create(db: AsyncSession, payload: BookCreate, owner_id: int) -> Book:
         book = Book(**payload.model_dump(), owner_id=owner_id)
@@ -85,6 +93,7 @@ class BooksDAO:
         await db.refresh(book)
         return book
     
+
     @staticmethod
     async def update(db: AsyncSession, book: Book, payload: BookUpdate) -> Book:
         for key, value in payload.model_dump(exclude_unset=True).items():
@@ -93,6 +102,7 @@ class BooksDAO:
         await db.refresh(book)
         return book
     
+
     @staticmethod
     async def delete(db: AsyncSession, book: Book) -> None:
         await db.delete(book)

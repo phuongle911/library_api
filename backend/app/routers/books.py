@@ -12,6 +12,7 @@ from app.services.book_service import (
 from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, BookOut
+from app.core.decorator.logging import log_route
 
 book_router = APIRouter()
 
@@ -27,6 +28,7 @@ async def get_book(book_id: int, db: AsyncSession = Depends(get_db), current_use
 
 
 @book_router.get("/books", response_model=PaginatedResponse[BookOut])
+#@log_route
 async def list_books(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),

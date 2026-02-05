@@ -70,6 +70,7 @@ async def list_books_service(
     )
     if cached is not None:
         return cached
+    print("error_spot", type(current_user))
     items, total = await BooksDAO.list_by_owner_paginated(
         db,
         owner_id=current_user,

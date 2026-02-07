@@ -7,6 +7,7 @@ from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
+from unittest.mock import AsyncMock, Mock
 
 from app.main import app
 from app.core.database import Base
@@ -119,3 +120,11 @@ async def other_owner_user(async_session):
     await async_session.commit()
     await async_session.refresh(u)
     return u
+
+
+def set_execute_first(db, first_value):
+    result = Mock()
+    scalars = Mock()
+    scalars.first.return_value = first_value
+    result.scalars.return_value = scalars
+    db.execute.return_value = result

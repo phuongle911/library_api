@@ -6,9 +6,14 @@ from app.routers.user import user_router
 from app.routers.books import book_router
 from app.routers.auth import auth_router
 from app.routers.library import library_router
+from app.core.logging import setup_logging
+from app.middlewares.request_context import RequestContextMiddleware
 
+setup_logging(level="INFO")
 
 app = FastAPI(title="My FastAPI App")
+app.add_middleware(RequestContextMiddleware)
+
 app.include_router(user_router, prefix="/api/v1")
 app.include_router(book_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")

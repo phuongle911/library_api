@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, Query   #API library
+import logging
+from fastapi import APIRouter, Depends, Query, Request   #API library
 from sqlalchemy.ext.asyncio import AsyncSession  #database library
 from app.schemas.books import BookCreate, BookUpdate, BookResponse  #schemas/DTO layer
 from app.core.database import get_db  #DB/engine layer
@@ -13,6 +14,8 @@ from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, BookOut
 from app.core.decorator.logging import log_route
+
+logger = logging.getLogger("app.books")
 
 book_router = APIRouter()
 
@@ -30,12 +33,23 @@ async def get_book(book_id: int, db: AsyncSession = Depends(get_db), current_use
 @book_router.get("/books", response_model=PaginatedResponse[BookOut])
 #@log_route
 async def list_books(
+    request: Request,
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     sort_by: str = Query("created_at"), 
     sort_dir: str = Query("decs"), 
     db: AsyncSession = Depends(get_db),
     ):
+    logger.info(
+        "books.list",
+        extra={
+            "request_id": request.state.request_id,
+            "page": page,
+            "page_size": page_size,
+            "sort_by": sort_by,
+            "sort_dir": sort_dir,
+        },
+    )
     return await list_books_service(db, page, page_size, sort_by, sort_dir)
 
 

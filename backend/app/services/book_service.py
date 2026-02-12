@@ -1,3 +1,6 @@
+import logging
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import HTTPException, status
@@ -10,7 +13,12 @@ from app.core.cache import (
     set_books_list_cache,
     invalidate_books_list_cache,
 )
+from app.core.db_errors import map_db_error
+
 import math
+
+logger = logging.getLogger("app.books")
+
 async def create_book_service(db: AsyncSession, payload: BookCreate, current_user: User) -> Book:
     try:
         result = await db.execute(select(Book).where(Book.title == payload.title))
@@ -70,17 +78,26 @@ async def list_books_service(
     )
     if cached is not None:
         return cached
-    print("error_spot", type(current_user))
-    items, total = await BooksDAO.list_by_owner_paginated(
-        db,
-        owner_id=current_user,
-        title=title,
-        author=author,
-        sort_by=sort_by,
-        sort_dir=sort_dir,
-        page=page,
-        page_size=page_size,
-    )
+    #print("error_spot", type(current_user))
+    #cached = None
+    #await db.execute("INVALID SQL")
+    try:
+        #await db.execute(text("SELECT * FROM table_that_does_not_exist"))
+        items, total = await BooksDAO.list_by_owner_paginated(
+            db,
+            owner_id=current_user,
+            title=title,
+            author=author,
+            sort_by=sort_by,
+            sort_dir=sort_dir,
+            page=page,
+            page_size=page_size,
+        )
+    except Exception as exc:
+        logger.exception("books.list.db_error", extra={"user_id": current_user})
+        raise map_db_error(exc)
+        
+
     total_pages = math.ceil(total / page_size) if total else 1
     result = {
         "items": items,

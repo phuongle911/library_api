@@ -8,6 +8,7 @@ from app.core.dependencies import get_current_user
 from app.core.permissions import require_active_user
 from app.core.decorator.auth import require_auth
 from app.core.decorator.logging import log_route
+from app.core.transactions import commit_or_rollback
 
 user_router = APIRouter()
 
@@ -19,7 +20,7 @@ user_router = APIRouter()
 #       raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already use") 
 #    user = User(**payload.model_dump())
 #    db.add(user)
-#    await db.commit()
+#    await commit_or_rollback(db)
 #    await db.refresh(user)
 #    return user
 
@@ -97,7 +98,7 @@ async def update_user(user_id: int, payload: UserUpdate, db: AsyncSession = Depe
    for key, value in payload.model_dump().items():
       setattr(user, key, value)
       db.add(user)
-      await db.commit()
+      await commit_or_rollback(db)
       await db.refresh(user)
       return user
    
@@ -109,6 +110,6 @@ async def delete_user(user_id: int, db: AsyncSession = Depends(get_db), current_
    if current_user.role != "admin" and user_id != current_user.id:
       raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this user")
    await db.delete(user)
-   await db.commit()
+   await commit_or_rollback(db)
    return {"message": "User deleted"}
 

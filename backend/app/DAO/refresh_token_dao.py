@@ -3,6 +3,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.refresh_token import RefreshToken
 from datetime import datetime, timezone
+from app.core.transactions import commit_or_rollback
 
 
 async def create_refresh_token_row(
@@ -17,7 +18,7 @@ async def create_refresh_token_row(
         expires_at=expires_at,
     )
     db.add(row)
-    await db.commit()
+    await commit_or_rollback(db)
     await db.refresh(row)
     return row
 
@@ -50,7 +51,7 @@ async def create_refresh_token_row(
         expires_at=expires_at,
     )
     db.add(row)
-    await db.commit()
+    await commit_or_rollback(db)
     await db.refresh(row)
     return row
 
@@ -90,7 +91,7 @@ async def revoke_refresh_tokens_for_user(
         )
         .values(revoked_at=datetime.now(timezone.utc))
     )
-    await db.commit()
+    await commit_or_rollback(db)
 
 
 async def revoke_refresh_token(db, token_hash: str):
@@ -102,4 +103,4 @@ async def revoke_refresh_token(db, token_hash: str):
         )
         .values(revoked_at=datetime.now(timezone.utc))
     )
-    await db.commit()
+    await commit_or_rollback(db)

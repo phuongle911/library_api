@@ -4,6 +4,7 @@ from sqlalchemy.exc import OperationalError
 from app.models.books import Book
 from app.schemas.books import BookCreate, BookUpdate
 from app.core.decorator.retry import retry_async
+from app.core.transactions import commit_or_rollback
 
 class BooksDAO:
     
@@ -89,7 +90,7 @@ class BooksDAO:
     async def create(db: AsyncSession, payload: BookCreate, owner_id: int) -> Book:
         book = Book(**payload.model_dump(), owner_id=owner_id)
         db.add(book)
-        await db.commit()
+        await commit_or_rollback(db)
         await db.refresh(book)
         return book
     
@@ -98,7 +99,7 @@ class BooksDAO:
     async def update(db: AsyncSession, book: Book, payload: BookUpdate) -> Book:
         for key, value in payload.model_dump(exclude_unset=True).items():
             setattr(book, key, value)
-        await db.commit()
+        await commit_or_rollback(db)
         await db.refresh(book)
         return book
     
@@ -106,4 +107,4 @@ class BooksDAO:
     @staticmethod
     async def delete(db: AsyncSession, book: Book) -> None:
         await db.delete(book)
-        await db.commit()
+        await commit_or_rollback(db)

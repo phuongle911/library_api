@@ -14,6 +14,7 @@ from app.core.cache import (
     invalidate_books_list_cache,
 )
 from app.core.db_errors import map_db_error
+from app.core.transactions import commit_or_rollback
 
 import math
 
@@ -27,7 +28,7 @@ async def create_book_service(db: AsyncSession, payload: BookCreate, current_use
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Title already use")
         book = Book(**payload.model_dump(), owner_id=current_user.id)
         db.add(book)
-        await db.commit()
+        await commit_or_rollback(db)
         await db.refresh(book)
         invalidate_books_list_cache(user_id=current_user.id)
         return book
@@ -132,7 +133,7 @@ async def update_book_service(db: AsyncSession, book_id: int, payload: BookUpdat
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not alowed")
         for key, value in payload.model_dump(exclude_unset=True).items():
             setattr(book, key, value)
-        await db.commit()
+        await commit_or_rollback(db)
         await db.refresh(book)
         invalidate_books_list_cache(user_id=current_user.id)
         return book
@@ -149,7 +150,7 @@ async def delete_book_service(db: AsyncSession, book_id: int, current_user: User
         if book.owner_id != current_user.id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not alowed")
         await db.delete(book)
-        await db.commit()
+        await commit_or_rollback(db)
         invalidate_books_list_cache(user_id=current_user.id)
         return {"message": "Book deleted"}
     except Exception as e:

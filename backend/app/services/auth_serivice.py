@@ -3,7 +3,7 @@ from sqlalchemy.future import select
 from fastapi import HTTPException, status
 from app.models.user import User
 from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token
-
+from app.core.transactions import commit_or_rollback
 
 async def user_signup(db: AsyncSession, email: str, password: str):
     result = await db.execute(select(User).where(User.email == email))
@@ -12,7 +12,7 @@ async def user_signup(db: AsyncSession, email: str, password: str):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exist")
     user = User(email=email, hashed_password=hash_password(password))
     db.add(user)
-    await db.commit()
+    await commit_or_rollback(db)
     await db.refresh(user)
     return user
 

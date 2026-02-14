@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.exc import IntegrityError
 
 from app.models.user import User
 
@@ -42,10 +41,10 @@ class UsersDAO:
         else: # newest/default
             q = q.order_by(User.id.desc())
 
-            q = q.offset(offset).limit(limit)
+        q = q.offset(offset).limit(limit)
 
-            res = await db.execute(q)
-            return list(res.scalars().all())
+        res = await db.execute(q)
+        return list(res.scalars().all())
 
     
     @staticmethod

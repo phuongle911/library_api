@@ -52,7 +52,7 @@ async def get_user(
    db: AsyncSession = Depends(get_db),
    current_user: User = Depends(get_current_user),
 ):
-   return await get_user_service(db, user_id)
+   return await get_user_service(db, user_id, current_user)
 
 
 @user_router.put("/users/{user_id}", response_model=UserResponse, status_code=200)

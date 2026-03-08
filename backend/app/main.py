@@ -8,6 +8,7 @@ from app.routers.user import user_router
 from app.routers.books import book_router
 from app.routers.auth import auth_router
 from app.routers.library import library_router
+from app.routers.categories import category_router
 from app.core.logging import setup_logging
 from app.middlewares.request_context import RequestContextMiddleware
 from app.core.exception_handlers import (
@@ -31,6 +32,7 @@ app.add_exception_handler(Exception, unhandled_exception_handler)
 app.include_router(user_router, prefix="/api/v1")
 app.include_router(book_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(category_router, prefix="/api/v1")
 app.include_router(library_router, prefix="/api/v1")
 
 @app.on_event("startup")

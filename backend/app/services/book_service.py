@@ -8,6 +8,7 @@ from app.schemas.books import BookCreate, BookUpdate
 from app.models.books import Book
 from app.models.user import User
 from app.DAO.books_dao import BooksDAO
+from app.DAO.categories_dao import CategoriesDAO
 from app.core.cache import (
     get_books_list_cache,
     set_books_list_cache,
@@ -20,21 +21,33 @@ import math
 
 logger = logging.getLogger("app.books")
 
-async def create_book_service(db: AsyncSession, payload: BookCreate, current_user: User) -> Book:
+async def create_book_service(
+        db: AsyncSession, 
+        payload: BookCreate, 
+        current_user: User
+        ) -> Book:
+    
+    category = await CategoriesDAO.get_by_id(db, payload.category_id)
+    if not category:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found",)
+   
+    book = Book(
+        title=payload.title, 
+        description=payload.description, 
+        author=payload.author, 
+        category_id=payload.category_id, 
+        owner_id=current_user.id,
+        )
+    
     try:
-        result = await db.execute(select(Book).where(Book.title == payload.title))
-        existing_book = result.scalars().first()
-        if existing_book:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Title already use")
-        book = Book(**payload.model_dump(), owner_id=current_user.id)
-        db.add(book)
-        await commit_or_rollback(db)
-        await db.refresh(book)
-        invalidate_books_list_cache(user_id=current_user.id)
-        return book
-    except Exception as e:
-        print(f"errors from creating books {e}")
-        raise
+        created_book = await BooksDAO.create(db, book)
+    except Exception as exc:
+        logger.exception(
+            "books.create.db_error",
+            extra={"user_id": current_user},
+        )
+        raise map_db_error(exc)
+    return created_book
 
 
 async def get_book_service(book_id: int, db: AsyncSession) -> Book:
@@ -53,6 +66,7 @@ async def list_books_service(
     current_user: User,
     title: str | None = None,
     author: str | None = None,
+    category_id: int | None = None,
     sort_by: str | None = None,
     sort_dir: str = "desc",
     page: int = 1,
@@ -72,6 +86,7 @@ async def list_books_service(
         current_user,
         title,
         author,
+        category_id,
         sort_by,
         sort_dir,
         page,
@@ -89,6 +104,7 @@ async def list_books_service(
             owner_id=current_user,
             title=title,
             author=author,
+            category_id=category_id,
             sort_by=sort_by,
             sort_dir=sort_dir,
             page=page,
@@ -115,6 +131,7 @@ async def list_books_service(
         current_user,
         title,
         author,
+        category_id,
         sort_by,
         sort_dir,
         page,

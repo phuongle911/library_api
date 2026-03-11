@@ -26,13 +26,7 @@ async def create_book(payload: BookCreate, db: AsyncSession = Depends(get_db), c
     return await create_book_service(db, payload, current_user)
 
 
-@book_router.get("/books/{book_id}", response_model=BookResponse, status_code=200)
-async def get_book(book_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return await get_book_service(book_id, db)
-
-
-@book_router.get("/books", response_model=list[BookListResponse])
-#@log_route
+@book_router.get("/books", response_model=PaginatedResponse[BookOut])
 async def list_books(
     title: str | None = Query(default=None),
     author: str | None = Query(default=None),
@@ -43,20 +37,9 @@ async def list_books(
     page_size: int = Query(default=10, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    ):
-    print(f"error splot {current_user.id}")
-    # logger.info(
-    #     "books.list",
-    #     extra={
-    #         "request_id": request.state.request_id,
-    #         "page": page,
-    #         "page_size": page_size,
-    #         "sort_by": sort_by,
-    #         "sort_dir": sort_dir,
-    #     },
-    # )
+):
     return await list_books_service(
-        db=db, 
+        db=db,
         current_user=current_user.id,
         title=title,
         author=author,
@@ -65,7 +48,12 @@ async def list_books(
         sort_dir=sort_dir,
         page=page,
         page_size=page_size,
-        )
+    )
+
+
+@book_router.get("/books/{book_id}", response_model=BookResponse, status_code=200)
+async def get_book(book_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return await get_book_service(book_id, db)
 
 
 @book_router.put("/books/{book_id}", response_model=BookResponse, status_code=200)

@@ -63,7 +63,7 @@ async def get_book_service(book_id: int, db: AsyncSession) -> Book:
 
 async def list_books_service(
     db: AsyncSession,
-    current_user: User,
+    current_user: int,
     title: str | None = None,
     author: str | None = None,
     category_id: int | None = None,

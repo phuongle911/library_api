@@ -28,6 +28,7 @@ class BooksDAO:
         owner_id: int,
         title: str | None = None,
         author: str | None = None,
+        category_id: int | None=None,
         sort_by: str | None = None,
         sort_dir: str = "desc",
         page: int = 1,
@@ -39,6 +40,8 @@ class BooksDAO:
             filters.append(Book.title.ilike(f"%{title}%"))
         if author:
             filters.append(Book.author.ilike(f"%{author}%"))
+        if category_id:
+            filters.append(Book.category_id == category_id)
         total_query = select(func.count(Book.id)).where(*filters)
         total = (await db.execute(total_query)).scalar_one()
         if sort_by == "title":
@@ -51,6 +54,7 @@ class BooksDAO:
         offset = (page - 1) * page_size
         data_query = (
             select(Book)
+            .options(selectinload(Book.category))
             .where(*filters)
             .order_by(order_expr)
             .offset(offset)

@@ -9,7 +9,11 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 # :white_check_mark: import Base + models so autogenerate can "see" tables
 from app.core.database import Base  # adjust if your path is different
-from app.models import *  # or import each model module explicitly
+from app.models.user import User
+from app.models.books import Book
+from app.models.categories import Category
+from app.models.refresh_token import RefreshToken
+
 target_metadata = Base.metadata
 def get_url() -> str:
     return os.getenv("DATABASE_URL") or config.get_main_option("sqlalchemy.url")

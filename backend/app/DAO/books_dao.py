@@ -1,6 +1,8 @@
 from sqlalchemy import select, func, asc, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import selectinload
+
 from app.models.books import Book
 from app.schemas.books import BookCreate, BookUpdate
 from app.core.decorator.retry import retry_async
@@ -26,6 +28,7 @@ class BooksDAO:
         owner_id: int,
         title: str | None = None,
         author: str | None = None,
+        category_id: int | None=None,
         sort_by: str | None = None,
         sort_dir: str = "desc",
         page: int = 1,
@@ -37,6 +40,8 @@ class BooksDAO:
             filters.append(Book.title.ilike(f"%{title}%"))
         if author:
             filters.append(Book.author.ilike(f"%{author}%"))
+        if category_id:
+            filters.append(Book.category_id == category_id)
         total_query = select(func.count(Book.id)).where(*filters)
         total = (await db.execute(total_query)).scalar_one()
         if sort_by == "title":
@@ -49,6 +54,7 @@ class BooksDAO:
         offset = (page - 1) * page_size
         data_query = (
             select(Book)
+            .options(selectinload(Book.category))
             .where(*filters)
             .order_by(order_expr)
             .offset(offset)
@@ -86,9 +92,17 @@ class BooksDAO:
         return result.scalars().all()
     
 
+    # @staticmethod
+    # async def create(db: AsyncSession, payload: BookCreate, owner_id: int) -> Book:
+    #     book = Book(**payload.model_dump(), owner_id=owner_id)
+    #     db.add(book)
+    #     await commit_or_rollback(db)
+    #     await db.refresh(book)
+    #     return book
+    
+
     @staticmethod
-    async def create(db: AsyncSession, payload: BookCreate, owner_id: int) -> Book:
-        book = Book(**payload.model_dump(), owner_id=owner_id)
+    async def create(db: AsyncSession, book: Book) -> Book:
         db.add(book)
         await commit_or_rollback(db)
         await db.refresh(book)
@@ -108,3 +122,23 @@ class BooksDAO:
     async def delete(db: AsyncSession, book: Book) -> None:
         await db.delete(book)
         await commit_or_rollback(db)
+
+
+    @staticmethod
+    async def list_with_category(
+        db: AsyncSession,
+        title: str | None = None,
+        category_id: int | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[Book]:
+        query = select(Book).options(selectinload(Book.category))
+
+        if title:
+            query = query.where(Book.title.ilike(f"%{title}%"))
+
+        if category_id:
+            query = query.order_by(Book.id.desc()).limit(limit).offset(offset)
+
+        result = await db.execute(query)
+        return list(result.scalars().all())

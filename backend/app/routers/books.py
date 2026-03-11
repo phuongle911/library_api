@@ -14,6 +14,7 @@ from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, BookOut
 from app.core.decorator.logging import log_route
+from app.schemas.books import BookListResponse
 
 logger = logging.getLogger("app.books")
 
@@ -25,32 +26,34 @@ async def create_book(payload: BookCreate, db: AsyncSession = Depends(get_db), c
     return await create_book_service(db, payload, current_user)
 
 
+@book_router.get("/books", response_model=PaginatedResponse[BookOut])
+async def list_books(
+    title: str | None = Query(default=None),
+    author: str | None = Query(default=None),
+    category_id: int | None = Query(default=None),
+    sort_by: str | None = Query(default=None),
+    sort_dir: str = Query(default="desc"),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return await list_books_service(
+        db=db,
+        current_user=current_user.id,
+        title=title,
+        author=author,
+        category_id=category_id,
+        sort_by=sort_by,
+        sort_dir=sort_dir,
+        page=page,
+        page_size=page_size,
+    )
+
+
 @book_router.get("/books/{book_id}", response_model=BookResponse, status_code=200)
 async def get_book(book_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     return await get_book_service(book_id, db)
-
-
-@book_router.get("/books", response_model=PaginatedResponse[BookOut])
-#@log_route
-async def list_books(
-    request: Request,
-    page: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
-    sort_by: str = Query("created_at"), 
-    sort_dir: str = Query("decs"), 
-    db: AsyncSession = Depends(get_db),
-    ):
-    logger.info(
-        "books.list",
-        extra={
-            "request_id": request.state.request_id,
-            "page": page,
-            "page_size": page_size,
-            "sort_by": sort_by,
-            "sort_dir": sort_dir,
-        },
-    )
-    return await list_books_service(db, page, page_size, sort_by, sort_dir)
 
 
 @book_router.put("/books/{book_id}", response_model=BookResponse, status_code=200)

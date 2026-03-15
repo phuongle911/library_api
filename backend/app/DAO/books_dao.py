@@ -1,3 +1,4 @@
+from unittest import result
 from sqlalchemy import select, func, asc, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import OperationalError
@@ -12,7 +13,8 @@ class BooksDAO:
     
     @staticmethod
     async def get_by_id(db: AsyncSession, book_id: int) -> Book | None:
-        return await db.get(Book, book_id)
+        result = await db.execute(select(Book).where(Book.id == book_id))
+        return result.scalars().first()
     
 
     @staticmethod

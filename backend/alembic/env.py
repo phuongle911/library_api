@@ -13,6 +13,7 @@ from app.models.user import User
 from app.models.books import Book
 from app.models.categories import Category
 from app.models.refresh_token import RefreshToken
+from app.models.borrow_record import BorrowRecord
 
 target_metadata = Base.metadata
 def get_url() -> str:

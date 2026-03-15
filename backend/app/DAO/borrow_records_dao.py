@@ -57,3 +57,19 @@ class BorrowRecordsDAO:
             .order_by(BorrowRecord.borrowed_at.desc())
         )
         return list(result.scalars().all())
+    
+
+    @staticmethod
+    async def get_active_by_user_and_book(
+        db: AsyncSession,
+        user_id: int,
+        book_id: int,
+    ) -> BorrowRecord | None:
+        result = await db.execute(
+            select(BorrowRecord).where(
+                BorrowRecord.user_id == user_id,
+                BorrowRecord.book_id == book_id,
+                BorrowRecord.status == "borrowed",
+            )
+        )
+        return result.scalars().first()

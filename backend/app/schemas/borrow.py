@@ -12,6 +12,7 @@ class BorrowRecordResponse(BaseModel):
     book_id: int
     status: str
     borrowed_at: datetime
+    return_at: datetime | None = None
 
     class Config:
         from_attributes = True

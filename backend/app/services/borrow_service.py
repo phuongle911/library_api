@@ -41,3 +41,19 @@ async def borrow_book_service(
 
         await db.refresh(borrow_record)
         return borrow_record
+    
+
+async def get_active_borrows_service(db: AsyncSession):
+    return await BorrowRecordsDAO.get_active(db)
+
+
+async def get_borrow_history_service(db: AsyncSession):
+    return await BorrowRecordsDAO.get_history(db)
+
+
+async def get_user_borrow_history_service(db: AsyncSession, user_id: int):
+    return await BorrowRecordsDAO.get_user_history(db, user_id)
+
+
+async def get_book_borrow_history_service(db: AsyncSession, book_id: int):
+    return await BorrowRecordsDAO.get_book_history(db, book_id)

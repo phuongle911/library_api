@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select 
 
 from app.models.borrow_record import BorrowRecord
+from app.models.books import Book
 
 
 class BorrowRecordsDAO:
@@ -73,3 +74,6 @@ class BorrowRecordsDAO:
             )
         )
         return result.scalars().first()
+    
+
+  

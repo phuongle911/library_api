@@ -144,3 +144,21 @@ class BooksDAO:
 
         result = await db.execute(query)
         return list(result.scalars().all())
+    
+
+    @staticmethod
+    async def get_by_id(db: AsyncSession, book_id: int) -> Book | None:
+        result = await db.execute(
+            select(Book).where(Book.id == book_id)
+        )
+        return result.scalars().first()
+    
+
+    @staticmethod
+    async def get_by_id_for_update(db: AsyncSession, book_id: int) -> Book | None:
+        result = await db.execute(
+            select(Book)
+            .where(Book.id == book_id)
+            .with_for_update()
+        )
+        return result.scalars().first()

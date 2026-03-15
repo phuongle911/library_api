@@ -16,13 +16,13 @@ async def borrow_book_service(
         user = await UsersDAO.get_by_id(db, user_id)
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404, 
+                status_code=status.status.HTTP_400_BAD_REQUEST, 
                 detail="User not found",
             )
-        book = await BooksDAO.get_by_id(db, book_id)
+        book = await BooksDAO.get_by_id_for_update(db, book_id)
         if not book:
             raise HTTPException(
-                status_code=status.HTTP_404, 
+                status_code=status.status.HTTP_400_BAD_REQUEST, 
                 detail="Book not found",
             )
         active_borrow = await BorrowRecordsDAO.get_active_by_user_and_book(
@@ -32,13 +32,13 @@ async def borrow_book_service(
         )
         if active_borrow:
             raise HTTPException(
-                status_code=400,
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail="User already has this book borrowed",
             )
         
         if book.available_copies <= 0:
             raise HTTPException(
-                status_code=status.HTTP_400, 
+                status_code=status.HTTP_400_BAD_REQUEST, 
                 detail="No available copies left",
             )
         

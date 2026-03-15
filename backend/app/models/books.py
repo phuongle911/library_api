@@ -14,5 +14,7 @@ class Book(Base):
     owner = relationship("User", back_populates="books")
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False, index=True)
     category = relationship("Category", back_populates="books")
+    available_copies = Column(Integer, nullable=False, default=1)
+    borrow_records = relationship("BorrowRecord", back_populates="book")
     
 

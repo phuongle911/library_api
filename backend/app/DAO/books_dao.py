@@ -1,27 +1,19 @@
-from unittest import result
 from sqlalchemy import select, func, asc, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import selectinload
 
 from app.models.books import Book
-from app.schemas.books import BookCreate, BookUpdate
+from app.schemas.books import BookUpdate
 from app.core.decorator.retry import retry_async
 from app.core.transactions import commit_or_rollback
 
-class BooksDAO:
-    
-    @staticmethod
-    async def get_by_id(db: AsyncSession, book_id: int) -> Book | None:
-        result = await db.execute(select(Book).where(Book.id == book_id))
-        return result.scalars().first()
-    
 
+class BooksDAO:
     @staticmethod
     async def get_by_title(db: AsyncSession, title: str) -> Book | None:
         result = await db.execute(select(Book).where(Book.title == title))
         return result.scalar_one_or_none()
-    
 
     @retry_async(attempts=3, delay_seconds=0.2, exceptions=(OperationalError,))
     @staticmethod
@@ -30,7 +22,7 @@ class BooksDAO:
         owner_id: int,
         title: str | None = None,
         author: str | None = None,
-        category_id: int | None=None,
+        category_id: int | None = None,
         sort_by: str | None = None,
         sort_dir: str = "desc",
         page: int = 1,
@@ -65,7 +57,6 @@ class BooksDAO:
         result = await db.execute(data_query)
         items = result.scalars().all()
         return items, total
-    
 
     @retry_async(attempts=3, delay_seconds=0.2, exceptions=(OperationalError,))
     @staticmethod
@@ -92,7 +83,6 @@ class BooksDAO:
             query = query.order_by(Book.id.asc())
         result = await db.execute(query)
         return result.scalars().all()
-    
 
     # @staticmethod
     # async def create(db: AsyncSession, payload: BookCreate, owner_id: int) -> Book:
@@ -101,7 +91,6 @@ class BooksDAO:
     #     await commit_or_rollback(db)
     #     await db.refresh(book)
     #     return book
-    
 
     @staticmethod
     async def create(db: AsyncSession, book: Book) -> Book:
@@ -109,7 +98,6 @@ class BooksDAO:
         await commit_or_rollback(db)
         await db.refresh(book)
         return book
-    
 
     @staticmethod
     async def update(db: AsyncSession, book: Book, payload: BookUpdate) -> Book:
@@ -118,13 +106,11 @@ class BooksDAO:
         await commit_or_rollback(db)
         await db.refresh(book)
         return book
-    
 
     @staticmethod
     async def delete(db: AsyncSession, book: Book) -> None:
         await db.delete(book)
         await commit_or_rollback(db)
-
 
     @staticmethod
     async def list_with_category(
@@ -144,7 +130,6 @@ class BooksDAO:
 
         result = await db.execute(query)
         return list(result.scalars().all())
-    
 
     @staticmethod
     async def get_by_id(db: AsyncSession, book_id: int) -> Book | None:
@@ -152,7 +137,6 @@ class BooksDAO:
             select(Book).where(Book.id == book_id)
         )
         return result.scalars().first()
-    
 
     @staticmethod
     async def get_by_id_for_update(db: AsyncSession, book_id: int) -> Book | None:

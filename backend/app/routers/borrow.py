@@ -34,15 +34,30 @@ async def get_active_borrows(db: AsyncSession = Depends(get_db)):
 
 
 @borrow_router.get("/history", response_model=list[BorrowRecordResponse])
-async def get_borrow_history(db: AsyncSession = Depends(get_db)):
-    return await get_borrow_history_service(db)
+async def get_borrow_history(status: Literal["borrowed", "returned"] | None = None, limit: int = Query(10, ge=1, le =100), offset:int = query(0, ge=0), db: AsyncSession = Depends(get_db),):
+    return await get_borrow_history_service(
+        db=db,
+        status=status,
+        limit=limit,
+        offset=offset,
+        )
 
 
 @borrow_router.get("/users/{user_id}/borrow-history", response_model=list[BorrowRecordResponse])
-async def get_user_borrow_history(user_id: int, db: AsyncSession = Depends(get_db)):
-    return await get_user_borrow_history_service(db, user_id)
+async def get_user_borrow_history(user_id: int, status: Literal["borrowed", "returned"] | None = None, limit: int = Query(10, ge=1, le=100), offset: int = Query(0, ge=0), db: AsyncSession = Depends(get_db),):
+    return await get_user_borrow_history_service(
+        db=db,
+        user_id=user_id,
+        status=status,
+        limit=limit,
+        offset=offset,)
 
 
 @borrow_router.get("/books/{book_id}/borrow-history", response_model=list[BorrowRecordResponse])
-async def get_book_borrow_history(book_id: int, db: AsyncSession = Depends(get_db)):
-    return await get_book_borrow_history_service(db, book_id)
+async def get_book_borrow_history(book_id: int, status: Literal["borrowed", "returned"] | None = None, limit: int = Query(10, ge=1, le=100), offset: int = Query(0, ge=0), db: AsyncSession = Depends(get_db),):
+    return await get_book_borrow_history_service(
+        db=db,
+        book_id=book_id,
+        status=status,
+        limit=limit,
+        offset=offset, )

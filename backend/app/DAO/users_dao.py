@@ -11,21 +11,23 @@ class UsersDAO:
     async def get_by_id(db: AsyncSession, user_id: int) -> User | None:
         result = await db.execute(select(User).where(User.id == user_id))
         return result.scalars().first()
-    
+
     @staticmethod
     async def get_by_email(db: AsyncSession, email: str) -> User | None:
         result = await db.execute(select(User).where(User.email == email))
         return result.scalars().first()
-    
+
     @staticmethod
-    async def list (
-        db: AsyncSession, 
+    async def list(
+        db: AsyncSession,
         name: str | None = None,
         email: str | None = None,
         sort_by: str | None = None,
-        limit: int = 50, 
+        limit: int = 50,
         offset: int = 0,
-        ) -> list[User]:
+        ) -> list[
+            User
+            ]:
         q = select(User)
 
         if name:
@@ -38,7 +40,7 @@ class UsersDAO:
             q = q.order_by(User.email.asc())
         elif sort_by == "oldest":
             q = q.order_by(User.id.asc())
-        else: # newest/default
+        else:  # newest/default
             q = q.order_by(User.id.desc())
 
         q = q.offset(offset).limit(limit)
@@ -46,12 +48,11 @@ class UsersDAO:
         res = await db.execute(q)
         return list(res.scalars().all())
 
-    
     @staticmethod
     async def create(db: AsyncSession, user: User) -> User:
         db.add(user)
         return user
-    
+
     @staticmethod
     async def set_role(db: AsyncSession, user: User, role: str) -> User:
         user.role = role

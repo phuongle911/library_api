@@ -1,8 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select 
+from sqlalchemy import select
 
 from app.models.borrow_record import BorrowRecord
-from app.models.books import Book
 
 
 class BorrowRecordsDAO:
@@ -10,7 +9,7 @@ class BorrowRecordsDAO:
     async def create(
         db: AsyncSession,
         user_id: int,
-        book_id: int   
+        book_id: int
          ) -> BorrowRecord:
         record = BorrowRecord(
             user_id=user_id,
@@ -20,7 +19,6 @@ class BorrowRecordsDAO:
         db.add(record)
         await db.flush()
         return record
-    
 
     @staticmethod
     async def get_active(db: AsyncSession) -> list[BorrowRecord]:
@@ -29,7 +27,6 @@ class BorrowRecordsDAO:
             .order_by(BorrowRecord.borrowed_at.desc())
         )
         return list(result.scalars().all())
-    
 
     @staticmethod
     async def get_history(db: AsyncSession) -> list[BorrowRecord]:
@@ -38,7 +35,6 @@ class BorrowRecordsDAO:
             .order_by(BorrowRecord.borrowed_at.desc())
         )
         return list(result.scalars().all())
-    
 
     @staticmethod
     async def get_user_history(db: AsyncSession, user_id: int) -> list[BorrowRecord]:
@@ -48,7 +44,6 @@ class BorrowRecordsDAO:
             .order_by(BorrowRecord.borrowed_at.desc())
         )
         return list(result.scalars().all())
-    
 
     @staticmethod
     async def get_book_history(db: AsyncSession, book_id: int) -> list[BorrowRecord]:
@@ -58,7 +53,6 @@ class BorrowRecordsDAO:
             .order_by(BorrowRecord.borrowed_at.desc())
         )
         return list(result.scalars().all())
-    
 
     @staticmethod
     async def get_active_by_user_and_book(
@@ -74,6 +68,3 @@ class BorrowRecordsDAO:
             )
         )
         return result.scalars().first()
-    
-
-  

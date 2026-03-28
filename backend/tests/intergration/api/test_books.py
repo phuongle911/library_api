@@ -24,4 +24,12 @@ async def test_list_books_with_auth(client, auth_headers):
     response = await client.get("/api/v1/books", headers=auth_headers)
     print("Error", response)
     assert response.status_code == 200
-    assert isinstance(response.json(), list)
+
+    data = response.json()
+    assert isinstance(data, dict)
+    assert "items" in data
+    assert "meta" in data
+    assert isinstance(data["items"], list)
+
+    meta = data["meta"]
+    #assert isinstance(response.json(), list)

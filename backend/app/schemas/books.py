@@ -8,7 +8,10 @@ class BookBase(BaseModel):
 
 
 class BookCreate(BookBase):
-    pass
+    title: str = Field(..., min_length=1, max_length=255)
+    description: str | None = None
+    author: str = Field(..., min_length=1, max_length=255)
+    category_id: int
 
 
 class BookUpdate(BaseModel):

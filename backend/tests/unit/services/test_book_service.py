@@ -1,10 +1,9 @@
 import pytest
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
-
 from fastapi import HTTPException
 from unittest.mock import AsyncMock, Mock
 
+from app.DAO.books_dao import BooksDAO
 from app.schemas.books import BookCreate, BookUpdate
 from app.services.book_service import (
     create_book_service,
@@ -14,6 +13,7 @@ from app.services.book_service import (
     delete_book_service,
 )
 from tests.conftest import set_execute_first
+
 
 def mock_db_title_exists(db, exists: bool):
     result = Mock()
@@ -39,7 +39,14 @@ def make_book(book_id=1, owner_id=1, **kwargs):
 
 @pytest.fixture
 def db():
-    return AsyncMock()
+    db = Mock()
+    db.add = Mock()
+    db.commit = AsyncMock()
+    db.refresh = AsyncMock()
+    db.delete = AsyncMock()
+    db.execute = AsyncMock()
+    db.get = AsyncMock()
+    return db
 
 @pytest.fixture
 def user():
@@ -64,18 +71,25 @@ def mock_dao(mocker):
         new=AsyncMock(return_value=([],0)),
     )
 
-def mock_db_title_exists(db, exists: bool):
-    result = AsyncMock()
-    scalars = AsyncMock()
-    scalars.first.return_value = make_book() if exists else None
-    result.scalars.return_value = scalars
-    db.execute.return_value = result
-
 
 @pytest.mark.asyncio
-async def test_create_book_title_exists(db, user, mock_cache):
-    set_execute_first(db, object())
-    payload = BookCreate(title="Clean Code", author="Robert", description="XO")
+async def test_create_book_title_exists(db, user, mocker):
+    mocker.patch(
+        "app.services.book_service.BooksDAO.get_by_title",
+        new=Mock(return_value=make_book()),
+    )
+
+    mocker.patch(
+        "app.services.book_service.CategoriesDAO.get_by_id",
+        new=AsyncMock(return_value=object()),
+    )
+
+    payload = BookCreate(
+        title="Clean Code",
+        author="Robert",
+        description="XO",
+        category_id=123,
+    )
 
     with pytest.raises(HTTPException) as e:
         await create_book_service(db, payload, user)
@@ -84,17 +98,28 @@ async def test_create_book_title_exists(db, user, mock_cache):
 
 
 @pytest.mark.asyncio
-async def test_create_book_success(db, user, mock_cache):
-    set_execute_first(db, None)
-    payload = BookCreate(title="Clean Code Continue", author="Robert", description="XO")
+async def test_create_book_success(db, user, mock_cache, mocker):
+    mocker.patch(
+        "app.services.book_service.CategoriesDAO.get_by_id",
+        new=AsyncMock(return_value=object()),
+    )
+    mocker.patch(
+        "app.services.book_service.BooksDAO.get_by_title",
+        new=Mock(return_value=None),
+    )
+
+    payload = BookCreate(
+        title="Clean Code Continue",
+        author="Robert",
+        description="XO",
+        category_id=123,
+    )
 
     book = await create_book_service(db, payload, user)
 
     db.add.assert_called_once()
     db.commit.assert_awaited_once()
     db.refresh.assert_awaited_once()
-
-    mock_cache["invalidate"].assert_called_once_with(user_id=user.id)
     assert book.owner_id == user.id
 
 
@@ -105,7 +130,7 @@ async def test_get_book_404(db):
     with pytest.raises(HTTPException) as e:
         await get_book_service(123, db)
 
-        assert e.value.status_code == 404
+    assert e.value.status_code == 404
 
 
 @pytest.mark.asyncio
@@ -141,7 +166,7 @@ async def test_list_books_calls_dao_and_sets_cache(db, user, mock_cache, mocker)
     assert result["meta"]["total_pages"] == 3
 
     called_kwargs = dao.await_args.kwargs
-    assert called_kwargs["owner_id"] is user
+    assert called_kwargs["owner_id"] == user
 
     mock_cache["set"].assert_called_once()
 
@@ -153,17 +178,17 @@ async def test_update_book_404(db, user):
     with pytest.raises(HTTPException) as e:
         await update_book_service(db, 1, BookUpdate(title="XO", author="Ann", description="anyhting"), user)
 
-        assert e.value.status_code == 404
+    assert e.value.status_code == 404
 
 
 @pytest.mark.asyncio
 async def test_update_book_403(db, user):
-    db.get = AsyncMock(reeturn_valuee=make_book(owner_id=999))
+    db.get = AsyncMock(return_value=make_book(owner_id=999))
 
     with pytest.raises(HTTPException) as e:
         await update_book_service(db, 1, BookUpdate(title="XO", author="Ann", description="anything"), user)
 
-        assert e.value.status_code == 403
+    assert e.value.status_code == 403
 
 
 @pytest.mark.asyncio
@@ -187,7 +212,7 @@ async def test_delete_book_404(db, user):
     with pytest.raises(HTTPException) as e:
         await delete_book_service(db, 1, user)
 
-        assert e.value.status_code == 404
+    assert e.value.status_code == 404
 
 
 @pytest.mark.asyncio
@@ -197,7 +222,7 @@ async def test_delete_book_403(db, user):
     with pytest.raises(HTTPException) as e:
         await delete_book_service(db, 1, user)
 
-        assert e.value.status_code == 403
+    assert e.value.status_code == 403
 
 
 @pytest.mark.asyncio

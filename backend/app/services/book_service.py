@@ -31,6 +31,13 @@ async def create_book_service(
     if not category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found",)
    
+    existing_book = BooksDAO.get_by_title(db, payload.title)
+    if existing_book:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Book title already exists",
+        )
+    
     book = Book(
         title=payload.title, 
         description=payload.description, 

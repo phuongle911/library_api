@@ -15,8 +15,10 @@ class Job(Base):
     error = Column(String, nullable=True)
 
     retry_count = Column(Integer, default=0)
+    max_retries = Column(Integer, default=3)
+    next_run_at = Column(DateTime, default=datetime.utcnow)
 
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 

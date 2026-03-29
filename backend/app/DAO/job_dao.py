@@ -1,5 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from datetime import datetime
+
 from app.models.job import Job
 
 
@@ -7,7 +9,7 @@ class JobDAO:
 
     @staticmethod
     async def create(db: AsyncSession, payload: dict, type: str) -> Job:
-        job = Job(type=type, payload=payload)
+        job = Job(type=type, payload=payload, next_run_at=datetime.utcnow())
         db.add(job)
         await db.commit()
         await db.refresh(job)
@@ -26,3 +28,17 @@ class JobDAO:
             .limit(1)
         )
         return result.scalars().first()
+    
+    @staticmethod
+    async def get_next_runnable_job(db):
+        result = await db.execute(
+            select(Job)
+            .where(Job.status == "pending")
+            .where(Job.next_run_at <= datetime.utcnow())
+            .order_by(Job.created_at.asc())
+            .limit(1)
+            .with_for_update(skip_locked=True)
+            )
+        return result.scalars().first()
+    
+

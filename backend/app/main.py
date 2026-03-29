@@ -11,7 +11,8 @@ from app.routers.library import library_router
 from app.routers.categories import category_router
 from app.routers.borrow import borrow_router
 from app.routers.job import job_router
-from app.core.logging import setup_logging
+#from app.core.logging import setup_logging
+from app.core.logging_config import setup_logging
 from app.middlewares.request_context import RequestContextMiddleware
 from app.core.exception_handlers import (
     http_exception_handler,
@@ -21,7 +22,7 @@ from app.core.exception_handlers import (
 )
 from app.core.errors import AppError
 
-setup_logging(level="INFO")
+setup_logging()
 
 app = FastAPI(title="My FastAPI App")
 app.add_middleware(RequestContextMiddleware)

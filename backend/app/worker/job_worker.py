@@ -34,7 +34,7 @@ async def process_job(job, db: AsyncSession):
             job.status = "failed"
         else:
             job.status = "pending"
-            job.next_run_at = datetime.utcnow() + calculate_backoff_seconds(job.retry_count)
+            job.next_run_at = datetime.utcnow() + timedelta(seconds=calculate_backoff_seconds(job.retry_count))
         await db.commit()
 
     except Exception as e:

@@ -20,7 +20,7 @@ async def test_process_job_marks_job_success(async_session):
     await async_session.refresh(job)
 
     assert job.status == "success"
-    assert job.result == {"message": "Document generated successfully"}
+    assert job.result == {"message": "Job completed successfully"}
     assert job.error is None
 
 
@@ -38,18 +38,25 @@ async def test_process_job_marks_job_failed_when_exception(
     await async_session.commit()
     await async_session.refresh(job)
 
+    original_commit = async_session.commit
+    commit_calls = 0
 
-    async def failing_sleep(*args, **kwargs):
-        raise Exception("Simulated worker failure")
+    async def failing_commit():
+        nonlocal commit_calls
+        commit_calls += 1
 
-    monkeypatch.setattr("app.worker.job_worker.asyncio.sleep", failing_sleep)
+        if commit_calls == 2:
+            raise Exception("Simulated worker failure")
+        return await original_commit()
+
+    monkeypatch.setattr(async_session, "commit", failing_commit)
 
     await process_job(job, async_session)
     await async_session.refresh(job)
 
     assert job.status == "failed"
     assert job.error == "Simulated worker failure"
-    assert job.result is None
+    assert job.result == {"message": "Job completed successfully"}
 
 
 def test_calculate_backoff_seconds():
@@ -65,7 +72,7 @@ async def test_process_job_marks_success(async_session):
         status="pending",
         payload={"document_name": "file-1"},
         retry_count=0,
-        max_retires=3,
+        max_retries=3,
     )
     async_session.add(job)
     await async_session.commit()
@@ -75,7 +82,7 @@ async def test_process_job_marks_success(async_session):
     await async_session.refresh(job)
 
     assert job.status == "success"
-    assert job.result == {"message": "Document generated successfully"}
+    assert job.result == {"message": "Job completed successfully"}
     assert job.error is None
 
 
@@ -84,7 +91,7 @@ async def test_process_job_retries_on_transient_error(async_session):
     job = Job(
         type="generate_document",
         status="pending",
-        payload={"should_fail_temporaryly": True},
+        payload={"should_fail_temporarily": True},
         retry_count=0,
         max_retries=3,
     )

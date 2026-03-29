@@ -22,7 +22,7 @@ async def process_job(job, db: AsyncSession):
             raise TransientJobError("Temporary external service failure")
         
         job.status = "success"
-        job.result = {"message": "Job completed successfullly"}
+        job.result = {"message": "Job completed successfully"}
         job.error = None
         await db.commit()
 

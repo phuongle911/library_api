@@ -1,3 +1,4 @@
+import logging
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta
@@ -5,6 +6,7 @@ from datetime import datetime, timedelta
 from app.core.database import AsyncSessionLocal
 from app.DAO.job_dao import JobDAO
 
+logger = logging.getLogger(__name__)
 
 def calculate_backoff_seconds(retry_count: int) -> int:
     return 2 ** retry_count
@@ -15,6 +17,8 @@ class TransientJobError(Exception):
 
 async def process_job(job, db: AsyncSession):
     try:
+        logger.info("JOB_STARTED", extra={"job_id":job.id})
+
         job.status = "processing"
         await db.commit()
 
@@ -26,9 +30,13 @@ async def process_job(job, db: AsyncSession):
         job.error = None
         await db.commit()
 
+        logger.info("JOB_SUCCESS", extra={"job_id":job.id})
+
     except TransientJobError as e:
         job.retry_count += 1
         job.error = str(e)
+
+        logger.warning("JOB_RETRY", extra={"job_id": job.id, "retry_count": job.retry_count})
 
         if job.retry_count >= job.max_retries:
             job.status = "failed"
@@ -40,6 +48,8 @@ async def process_job(job, db: AsyncSession):
     except Exception as e:
         job.status = "failed"
         job.error = str(e)
+
+        logger.error("JOB_FAILED", extra={"job_id": job.id, "error": str(e)})
     
         await db.commit()
 

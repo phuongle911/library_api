@@ -2,6 +2,8 @@ import logging
 import json
 from datetime import datetime
 
+from app.core.request_id import get_request_id
+
 
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
@@ -10,41 +12,41 @@ class JsonFormatter(logging.Formatter):
             "level": record.levelname,
             "message": record.getMessage(),
             "logger": record.name,
+            "request_id": get_request_id(),
         }
 
-        # include extra fields like job_id, error, etc.
-        if hasattr(record, "__dict__"):
-            for key, value in record.__dict__.items():
-                if key not in (
-                    "name",
-                    "msg",
-                    "args",
-                    "levelname",
-                    "levelno",
-                    "pathname",
-                    "filename",
-                    "module",
-                    "exc_info",
-                    "exc_text",
-                    "stack_info",
-                    "lineno",
-                    "funcName",
-                    "created",
-                    "msecs",
-                    "relativeCreated",
-                    "thread",
-                    "threadName",
-                    "processName",
-                    "process",
-                ):
-                    log_record[key] = value
+        skip_fields = {"name",
+                       "msg",
+                       "args",
+                       "levelname",
+                       "levelno",
+                       "pathname",
+                       "filename",
+                       "module",
+                       "exc_info",
+                       "exc_text",
+                       "stack_info",
+                       "lineno",
+                       "funcName",
+                       "created",
+                       "msecs",
+                       "relativeCreated",
+                       "thread",
+                       "threadName",
+                       "processName",
+                       "process",
+                       }
+        for key, value in record.__dict__.items():
+            if key not in skip_fields:
+                log_record[key] = value
                     
         return json.dumps(log_record)
+    
                 
-    def setup_logging():
-        handler = logging.StreamHandler()
-        handler.setFormatter(JsonFormatter())
+def setup_logging():
+    handler = logging.StreamHandler()
+    handler.setFormatter(JsonFormatter())
 
-        root_logger = logging.getLogger()
-        root_logger.setLevel(logging.INFO)
-        root_logger.handlers = [handler]
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.handlers = [handler]

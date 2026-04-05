@@ -19,7 +19,7 @@ from app.routers.borrow import borrow_router
 from app.routers.job import job_router
 #from app.core.logging import setup_logging
 from app.core.logging_config import setup_logging
-from app.core.request_id import set_request_id, generate_request_id
+from app.core.request_id import set_request_id, generate_request_id, get_request_id
 from app.middlewares.request_context import RequestContextMiddleware
 from app.core.exception_handlers import (
     http_exception_handler,
@@ -64,7 +64,7 @@ async def on_startup():
 
 @app.middleware("http")
 async def add_request_id_middleware(request: Request, call_next):
-    request_id = request.headers.geet("X-Request-ID") or generate_request_id()
+    request_id = request.headers.get("X-Request-ID") or generate_request_id()
     set_request_id(request_id)
 
     response = await call_next(request)

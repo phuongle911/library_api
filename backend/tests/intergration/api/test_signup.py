@@ -9,6 +9,7 @@ async def test_signup_success(client):
                                      "name":"Test User",
                                      "email":unique_email,
                                      "password":"password123",
+                                     "role":"user"
                                  },
                                  )
     assert response.status_code in (200, 201)
@@ -25,6 +26,7 @@ async def test_signup_duplicate_email(client):
         "name":"Test User",
         "email":unique_email,
         "password":"password123",
+        "role":"user"
     }
     response_1 = await client.post("/api/v1/auth/signup", json=payload)
     assert response_1.status_code in (200, 201)

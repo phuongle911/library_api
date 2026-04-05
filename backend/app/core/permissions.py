@@ -15,18 +15,18 @@ def require_admin(current_user: User = Depends(require_active_user)) -> User:
     return current_user
 
 
-def is_admin(user) -> bool:
-    return getattr(user, "role", None) == "admin"
+def is_admin(user: User) -> bool:
+    return user.role == "admin"
 
 
 def forbid(detail: str = "Forbidden"):
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
 
 
-def require_owner_or_admin(user, owner_id: int):
+def require_owner_or_admin(user: User, owner_id: int) -> None:
     if is_admin(user):
         return
-    if getattr(user, "id", None) != owner_id:
+    if user.id != owner_id:
         forbid("Not allowed")
         
 

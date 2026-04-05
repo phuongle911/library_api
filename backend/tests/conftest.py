@@ -110,15 +110,17 @@ async def other_owner_user(async_session):
 async def auth_headers(client):
     email = f"user_{uuid.uuid4()}@example.com"
     password = "password123"
+    role = "user"
 
     await client.post(
         "/api/v1/auth/signup",
-        json={"name": "Test User", "email": email, "password": password},
+        json={"name": "Test User", "email": email, "password": password, "role": role},
     )
     login_response = await client.post(
         "/api/v1/auth/login",
         json={"email": email, "password": password},
     )
+    print(f"Login response: {login_response.status_code}, {login_response.text}")
     token = login_response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 

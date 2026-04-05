@@ -53,7 +53,7 @@ async def list_books(
 
 @book_router.get("/books/{book_id}", response_model=BookResponse, status_code=200)
 async def get_book(book_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return await get_book_service(book_id, db)
+    return await get_book_service(book_id, db, current_user)
 
 
 @book_router.put("/books/{book_id}", response_model=BookResponse, status_code=200)

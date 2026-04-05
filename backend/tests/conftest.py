@@ -114,7 +114,7 @@ async def auth_headers(client):
 
     await client.post(
         "/api/v1/auth/signup",
-        json={"name": "Test User", "email": email, "password": password, "role": role},
+        json={"name": "Test User", "email": email, "password": password, "role": role },
     )
     login_response = await client.post(
         "/api/v1/auth/login",

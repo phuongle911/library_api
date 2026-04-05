@@ -12,6 +12,7 @@ class UserCreate(BaseModel):
     password: str | None = Field(None, min_length=6, max_length=80)
     name: str = Field(..., min_length=2, max_length=50)
     email: EmailStr
+    role: str 
 
 
 class UserUpdate(BaseModel):

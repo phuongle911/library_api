@@ -7,12 +7,13 @@ from app.core.request_id import get_request_id
 
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
+        request_id = get_request_id()
         log_record = {
             "timestamp": datetime.utcnow().isoformat(),
             "level": record.levelname,
             "message": record.getMessage(),
             "logger": record.name,
-            "request_id": get_request_id(),
+            "request_id": request_id,
         }
 
         skip_fields = {"name",

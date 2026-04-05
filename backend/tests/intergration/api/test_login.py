@@ -9,6 +9,7 @@ async def test_login_success(client):
                                      "name":"Test User",
                                      "email":unique_email,
                                      "password":"password123",
+                                     "role":"user"
                                  },
                                  )
     assert response_signup.status_code in (200, 201)
@@ -33,6 +34,7 @@ async def test_login_wrong_password(client):
                                      "name":"Test User",
                                      "email":unique_email,
                                      "password":"password123",
+                                     "role":"user"
                                  },
                                  )
     assert response_signup.status_code in (200, 201)

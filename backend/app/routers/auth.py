@@ -20,7 +20,7 @@ auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @auth_router.post("/signup")
 async def signup(payload: UserCreate, db: AsyncSession=Depends(get_db)):
-    user = await user_signup(db, payload.email, payload.password)
+    user = await user_signup(db, payload.email, payload.password, payload.role)
     print("Enpoint", user)
     return {"id": user.id, "email": user.email}
 

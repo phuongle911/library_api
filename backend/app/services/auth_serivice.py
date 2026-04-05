@@ -5,12 +5,12 @@ from app.models.user import User
 from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token
 from app.core.transactions import commit_or_rollback
 
-async def user_signup(db: AsyncSession, email: str, password: str):
+async def user_signup(db: AsyncSession, email: str, password: str, role:str):
     result = await db.execute(select(User).where(User.email == email))
     existing_email = result.scalar_one_or_none()
     if existing_email:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exist")
-    user = User(email=email, hashed_password=hash_password(password))
+    user = User(email=email, hashed_password=hash_password(password), role=role)
     db.add(user)
     await commit_or_rollback(db)
     await db.refresh(user)

@@ -16,6 +16,7 @@ from app.core.cache import (
 )
 from app.core.db_errors import map_db_error
 from app.core.transactions import commit_or_rollback
+from app.core.permissions import require_owner_or_admin
 
 import math
 
@@ -31,7 +32,7 @@ async def create_book_service(
     if not category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found",)
    
-    existing_book = BooksDAO.get_by_title(db, payload.title)
+    existing_book = await BooksDAO.get_by_title(db, payload.title)
     if existing_book:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -57,15 +58,12 @@ async def create_book_service(
     return created_book
 
 
-async def get_book_service(book_id: int, db: AsyncSession) -> Book:
-    try:
+async def get_book_service(book_id: int, db: AsyncSession, current_user: User) -> Book:
         book = await db.get(Book, book_id)
         if not book:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Title not found")
+        require_owner_or_admin(current_user, book.owner_id)
         return book
-    except Exception as e:
-        print(f"errors from get book {e}")
-        raise
 
 
 async def list_books_service(
@@ -153,16 +151,15 @@ async def update_book_service(db: AsyncSession, book_id: int, payload: BookUpdat
         book = await db.get(Book, book_id)
         if not book:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
-        if book.owner_id != current_user.id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not alowed")
+        require_owner_or_admin(current_user, book.owner_id)
         for key, value in payload.model_dump(exclude_unset=True).items():
             setattr(book, key, value)
         await commit_or_rollback(db)
         await db.refresh(book)
         invalidate_books_list_cache(user_id=current_user.id)
         return book
-    except Exception as e:
-        print(f"errors from updating book {e}")
+    except Exception as exc:
+        logger.exception("books.update.error", extra={"book_id": book_id})
         raise
 
 
@@ -171,14 +168,13 @@ async def delete_book_service(db: AsyncSession, book_id: int, current_user: User
         book = await db.get(Book, book_id)
         if not book:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
-        if book.owner_id != current_user.id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not alowed")
+        require_owner_or_admin(current_user, book.owner_id)
         await db.delete(book)
         await commit_or_rollback(db)
         invalidate_books_list_cache(user_id=current_user.id)
         return {"message": "Book deleted"}
-    except Exception as e:
-        print(f"errors from deleting book {e}")
+    except Exception as exc:
+        logger.exception("books.delete.error", extra={"book_id": book_id})
         raise
 
 

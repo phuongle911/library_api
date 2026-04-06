@@ -40,10 +40,10 @@ class JsonFormatter(logging.Formatter):
         for key, value in record.__dict__.items():
             if key not in skip_fields:
                 log_record[key] = value
-                    
+
         return json.dumps(log_record)
-    
-                
+
+
 def setup_logging():
     handler = logging.StreamHandler()
     handler.setFormatter(JsonFormatter())

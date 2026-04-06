@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict
 
+
 class BookBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
     description: str | None = None
@@ -49,5 +50,3 @@ class BookListResponse(BaseModel):
     owner_id: int
     category_id: int
     category: CategoryMiniResponse
-    
-        

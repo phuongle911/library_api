@@ -27,17 +27,21 @@ async def list_users_service(
 
 
 async def get_user_service(
-        db: AsyncSession, 
+        db: AsyncSession,
         user_id: int,
         current_user: User,
         ) -> User:
     user = await UsersDAO.get_by_id(db, user_id)
     if not user:
         raise AppError(code="NOT_FOUND", message="User not found", status_code=404)
-    
+
     if not can_view_user(current_user, user):
-        raise AppError(code="FORBIDDEN", message="Not authorized to view this user", status_code=403)
-    
+        raise AppError(
+            code="FORBIDDEN",
+            message="Not authorized to view this user",
+            status_code=403
+            )
+
     return user
 
 
@@ -50,10 +54,14 @@ async def update_user_service(
     user = await UsersDAO.get_by_id(db, user_id)
     if not user:
         raise AppError(code="NOT_FOUND", message="User not found", status_code=404)
-    
+
     if not can_edit_user(current_user, user):
-        raise AppError(code="FORBIDDEN", message="Not authorized to update this user", status_code=403)
-    
+        raise AppError(
+            code="FORBIDDEN",
+            message="Not authorized to update this user",
+            status_code=403
+            )
+
     data = payload.model_dump(exclude_unset=True)
     for key, value in data.items():
         setattr(user, key, value)
@@ -61,7 +69,7 @@ async def update_user_service(
     await commit_or_rollback(db)
     await db.refresh(user)
     return user
-    
+
 
 async def delete_user_service(
         db: AsyncSession,
@@ -71,9 +79,13 @@ async def delete_user_service(
     user = await UsersDAO.get_by_id(db, user_id)
     if not user:
         raise AppError(code="NOT_FOUND", message="User not found", status_code=404)
-    
+
     if not can_delete_user(current_user, user):
-        raise AppError(code="FORBIDDEN", message="Not authorized to delete this user", status_code=403)
-    
+        raise AppError(
+            code="FORBIDDEN",
+            message="Not authorized to delete this user",
+            status_code=403
+            )
+
     await db.delete(user)
     await commit_or_rollback(db)

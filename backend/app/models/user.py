@@ -14,4 +14,3 @@ class User(Base):
     is_active = Column(Boolean, nullable=False, default=True)
     books = relationship("Book", back_populates="owner")
     borrow_records = relationship("BorrowRecord", back_populates="user")
-

@@ -12,19 +12,19 @@ def require_auth(fn: Callable[..., Awaitable[Any]]):
         if request is None:
             for a in args:
                 if isinstance(a, Request):
-                    request = a 
+                    request = a
                     break
 
         if request is None:
             raise RuntimeError("request: Reuest is required")
-        
+
         auth = request.headers.get("Authorization", "")
         if not auth.startswith("Bearer"):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Missing Bearer token",
             )
-        
+
         token = auth.split(" ", 1)[1].strip()
         try:
             payload = decode_token(token)
@@ -33,8 +33,8 @@ def require_auth(fn: Callable[..., Awaitable[Any]]):
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid or expired token",
             )
-        
+
         request.state.user = payload
         return await fn(*args, **kwargs)
-    
+
     return wrapper

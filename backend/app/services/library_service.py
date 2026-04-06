@@ -1,6 +1,5 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
 
 from app.DAO.books_dao import BooksDAO
 from app.schemas.books import BookCreate
@@ -22,4 +21,3 @@ class LibraryService:
         book = await BooksDAO.create(db, data, owner_id)
         logger.info("book_created owner_id=%s book_id=%s", owner_id, book.id)
         return book
-        

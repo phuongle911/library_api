@@ -8,17 +8,18 @@ from app.core.errors import AppError, error_payload
 
 logger = logging.getLogger("app.errors")
 
-async def http_exception_handler(request: Request, exc: StarletteHTTPException):
-   request_id = getattr(request.state, "request_id", None)
-   detail = exc.detail
-   if isinstance(detail, dict) and "code" in detail and "message" in detail:
-       code = detail["code"]
-       message = detail["message"]
-   else:
-       code = "HTTP_ERROR"
-       message = detail if isinstance(detail, str) else "Request failed"
 
-       logger.warning(
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    request_id = getattr(request.state, "request_id", None)
+    detail = exc.detail
+    if isinstance(detail, dict) and "code" in detail and "message" in detail:
+        code = detail["code"]
+        message = detail["message"]
+    else:
+        code = "HTTP_ERROR"
+        message = detail if isinstance(detail, str) else "Request failed"
+
+        logger.warning(
            "http_exception",
            extra={
                "request_id": request_id,
@@ -26,13 +27,12 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
                "path": request.url.path,
                "error_code": code,
            },
-       )
+        )
 
-       return JSONResponse(
+        return JSONResponse(
            status_code=exc.status_code,
            content=error_payload(code, message, request_id),
-       )
-       
+        )
 
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -53,7 +53,11 @@ async def app_error_handler(request: Request, exc: AppError):
 
     logger.info(
         "app_error",
-        extra={"request_id": rid, "status_code": exc.status_code, "path": request.url.path},
+        extra={
+            "request_id": rid,
+            "status_code": exc.status_code,
+            "path": request.url.path
+            },
     )
     return JSONResponse(
         status_code=exc.status_code,
@@ -72,4 +76,3 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content=error_payload("INTERNAL_SERVER_ERROR", "Something went wrong", rid),
     )
-

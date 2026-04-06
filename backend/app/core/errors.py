@@ -8,7 +8,7 @@ class AppError(Exception):
     status_code: int = 400
 
 
-def error_payload(code:str, message: str, request_id: str | None):
+def error_payload(code: str, message: str, request_id: str | None):
     return {"error": {"code": code, "message": message, "request_id": request_id}}
 
 

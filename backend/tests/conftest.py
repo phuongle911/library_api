@@ -12,7 +12,10 @@ from app.main import app
 from app.core.database import Base, get_db
 from app.models.user import User
 
-TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL") or "postgresql+asyncpg://postgres:postgres@db:5432/app_test"
+TEST_DATABASE_URL = (
+    os.getenv("TEST_DATABASE_URL")
+    or "postgresql+asyncpg://postgres:postgres@localhost/test_db"
+)
 
 
 @pytest.fixture(scope="session")
@@ -114,7 +117,7 @@ async def auth_headers(client):
 
     await client.post(
         "/api/v1/auth/signup",
-        json={"name": "Test User", "email": email, "password": password, "role": role },
+        json={"name": "Test User", "email": email, "password": password, "role": role},
     )
     login_response = await client.post(
         "/api/v1/auth/login",

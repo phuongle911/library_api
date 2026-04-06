@@ -12,7 +12,11 @@ class BorrowRecord(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     book_id: Mapped[int] = mapped_column(ForeignKey("books.id"), nullable=False)
     status: Mapped[str] = mapped_column(String, nullable=False, default="borrowed")
-    borrowed_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    borrowed_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=datetime.utcnow
+        )
 
     user = relationship("User", back_populates="borrow_records")
     book = relationship("Book", back_populates="borrow_records")

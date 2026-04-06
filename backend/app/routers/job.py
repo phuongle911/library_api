@@ -26,10 +26,9 @@ async def get_job(job_id: int, db: AsyncSession = Depends(get_db)):
     job = await JobDAO.get_by_id(db, job_id)
     if not job:
         return {"error": "Job not found"}
-    
+
     return {
         "job_id": job.id,
         "status": job.status,
         "result": job.result,
-
     }

@@ -5,6 +5,7 @@ import logging
 
 logger = logging.getLogger("uvicorn.error")
 
+
 def log_route(fn: Callable[..., Awaitable[Any]]):
     @wraps(fn)
     async def wrapper(*args, **kwargs):
@@ -16,7 +17,10 @@ def log_route(fn: Callable[..., Awaitable[Any]]):
             return res
         except Exception:
             ms = (time.perf_counter() - start) * 1000
-            logger.exception("route_fail", extra={"route": fn.__name__, "ms": round(ms, 2)})
+            logger.exception(
+                "route_fail",
+                extra={"route": fn.__name__, "ms": round(ms, 2)}
+                )
             raise
-    
+
     return wrapper

@@ -14,7 +14,10 @@ from app.services.categories_service import (
 category_router = APIRouter(prefix="/categories", tags=["Categories"])
 
 
-@category_router.post("", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED,)
+@category_router.post(
+        "", response_model=CategoryResponse,
+        status_code=status.HTTP_201_CREATED,
+        )
 async def create_category(payload: CategoryCreate, db: AsyncSession = Depends(get_db),):
     return await create_category_service(db, payload)
 
@@ -29,13 +32,25 @@ async def list_categories(
     return await list_categories_service(db=db, name=name, limit=limit, offset=offset,)
 
 
-@category_router.get("/{category_id}", response_model=CategoryResponse, status_code=status.HTTP_200_OK,)
+@category_router.get(
+        "/{category_id}",
+        response_model=CategoryResponse,
+        status_code=status.HTTP_200_OK,
+        )
 async def get_category_by_id(category_id: int, db: AsyncSession = Depends(get_db),):
     return await get_category_by_id_service(db, category_id)
 
 
-@category_router.patch("/{category_id}", response_model=CategoryResponse, status_code=status.HTTP_200_OK,)
-async def update_category(category_id: int, payload: CategoryUpdate, db: AsyncSession = Depends(get_db),):
+@category_router.patch(
+        "/{category_id}",
+        response_model=CategoryResponse,
+        status_code=status.HTTP_200_OK,
+        )
+async def update_category(
+    category_id: int,
+    payload: CategoryUpdate,
+    db: AsyncSession = Depends(get_db),
+      ):
     return await update_category_service(db, category_id, payload)
 
 

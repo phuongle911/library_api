@@ -7,12 +7,12 @@ class UserRole(str, Enum):
     admin = "admin"
     user = "user"
 
-    
+
 class UserCreate(BaseModel):
     password: str | None = Field(None, min_length=6, max_length=80)
     name: str = Field(..., min_length=2, max_length=50)
     email: EmailStr
-    role: str 
+    role: str
 
 
 class UserUpdate(BaseModel):
@@ -38,5 +38,3 @@ class UserLogin(BaseModel):
 
 class RefreshTokenSchema(BaseModel):
     refresh_token: str
-
-

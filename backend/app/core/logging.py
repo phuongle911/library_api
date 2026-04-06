@@ -19,7 +19,13 @@ class JsonFormatter(logging.Formatter):
                 if k.startswith("_"):
                     continue
                 # keep it small: only simple types, else stringify
-                if k not in payload and k not in ("args", "msg", "exc_info", "exc_text", "stack_info"):
+                if k not in payload and k not in (
+                    "args",
+                    "msg",
+                    "exc_info",
+                    "exc_text",
+                    "stack_info"
+                      ):
                     payload[k] = v
 
             if record.exc_info:

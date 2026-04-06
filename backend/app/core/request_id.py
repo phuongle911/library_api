@@ -12,5 +12,5 @@ def set_request_id(request_id: str) -> None:
     request_id_ctx_var.set(request_id)
 
 
-def generate_request_id() -> str: 
+def generate_request_id() -> str:
     return str(uuid.uuid4())

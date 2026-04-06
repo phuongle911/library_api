@@ -1,8 +1,11 @@
 import asyncio
 from sqlalchemy import select
+
 from app.core.database import AsyncSessionLocal
 from app.models.user import User
 from app.models.books import Book
+
+
 async def seed():
     async with AsyncSessionLocal() as session:
         # 1) Create/find a user
@@ -21,12 +24,21 @@ async def seed():
             await session.flush()
         # 2) Create books linked to this user (owner_id NOT NULL)
         books = [
-            Book(title="Clean Code", description=None, author="Robert C. Martin", owner_id=user.id),
-            Book(title="The Pragmatic Programmer", description=None, author="Andrew Hunt", owner_id=user.id),
+            Book(
+                title="Clean Code",
+                description=None,
+                author="Robert C. Martin",
+                owner_id=user.id
+                ),
+            Book(
+                title="The Pragmatic Programmer",
+                description=None,
+                author="Andrew Hunt",
+                owner_id=user.id
+                ),
         ]
         session.add_all(books)
         await session.commit()
         print(f"Seeded user_id={user.id} and {len(books)} books")
 if __name__ == "__main__":
     asyncio.run(seed())
-

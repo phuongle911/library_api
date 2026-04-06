@@ -9,12 +9,13 @@ logger = logging.getLogger("app.request")
 
 REQUEST_ID_HEADER = "X-Request-Id"
 
+
 class RequestContextMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         request_id = request.headers.get(REQUEST_ID_HEADER) or str(uuid.uuid4())
         start = time.perf_counter()
 
-        #store on request.state (so deps/services can access if needed)
+        # store on request.state (so deps/services can access if needed)
         request.state.request_id = request_id
 
         try:
@@ -24,7 +25,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             latency_ms = round((time.perf_counter() - start) * 1000, 2)
             status_code = getattr(locals().get("response"), "status_code", 500)
 
-            #return request id back to client
+            # return request id back to client
             if "response" in locals():
                 locals()["response"].headers[REQUEST_ID_HEADER] = request_id
 

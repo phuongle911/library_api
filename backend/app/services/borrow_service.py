@@ -4,7 +4,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.DAO.users_dao import UsersDAO
 from app.DAO.books_dao import BooksDAO
 from app.DAO.borrow_records_dao import BorrowRecordsDAO
-from app.models.borrow_record import BorrowRecord
 
 
 async def borrow_book_service(
@@ -16,13 +15,13 @@ async def borrow_book_service(
         user = await UsersDAO.get_by_id(db, user_id)
         if not user:
             raise HTTPException(
-                status_code=status.status.HTTP_400_BAD_REQUEST, 
+                status_code=status.status.HTTP_400_BAD_REQUEST,
                 detail="User not found",
             )
         book = await BooksDAO.get_by_id_for_update(db, book_id)
         if not book:
             raise HTTPException(
-                status_code=status.status.HTTP_400_BAD_REQUEST, 
+                status_code=status.status.HTTP_400_BAD_REQUEST,
                 detail="Book not found",
             )
         active_borrow = await BorrowRecordsDAO.get_active_by_user_and_book(
@@ -35,13 +34,13 @@ async def borrow_book_service(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="User already has this book borrowed",
             )
-        
+
         if book.available_copies <= 0:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, 
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No available copies left",
             )
-        
+
         book.available_copies -= 1
 
         borrow_record = await BorrowRecordsDAO.create(
@@ -52,7 +51,7 @@ async def borrow_book_service(
 
         await db.refresh(borrow_record)
         return borrow_record
-    
+
 
 async def get_active_borrows_service(db: AsyncSession):
     return await BorrowRecordsDAO.get_active(db)

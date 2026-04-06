@@ -112,15 +112,3 @@ def invalidate_books_list_cache(user_id: int | None = None):
     keys_to_delete = [k for k in _BOOKS_LIST_CACHE if k[0] == user_id]
     for k in keys_to_delete:
         _BOOKS_LIST_CACHE.pop(k, None)
-
-
-
-
-
-
-
-
-
-
-
-

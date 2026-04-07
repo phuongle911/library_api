@@ -22,7 +22,7 @@ def mock_db_title_exists(db, exists: bool):
 
 
 def make_user(user_id=1):
-    return SimpleNamespace(id=user_id)
+    return SimpleNamespace(id=user_id, role="user")
 
 
 def make_book(book_id=1, owner_id=1, **kwargs):
@@ -85,7 +85,7 @@ def mock_dao(mocker):
 async def test_create_book_title_exists(db, user, mocker):
     mocker.patch(
         "app.services.book_service.BooksDAO.get_by_title",
-        new=Mock(return_value=make_book()),
+        new=AsyncMock(return_value=make_book()),
     )
 
     mocker.patch(
@@ -114,7 +114,7 @@ async def test_create_book_success(db, user, mock_cache, mocker):
     )
     mocker.patch(
         "app.services.book_service.BooksDAO.get_by_title",
-        new=Mock(return_value=None),
+        new=AsyncMock(return_value=None),
     )
 
     payload = BookCreate(
@@ -137,7 +137,7 @@ async def test_get_book_404(db):
     db.get = AsyncMock(return_value=None)
 
     with pytest.raises(HTTPException) as e:
-        await get_book_service(123, db)
+        await get_book_service(123, db, current_user=make_user())
 
     assert e.value.status_code == 404
 
@@ -147,7 +147,7 @@ async def test_get_book_success(db):
     book = make_book(book_id=5)
     db.get = AsyncMock(return_value=book)
 
-    got = await get_book_service(5, db)
+    got = await get_book_service(5, db, current_user=make_user())
     assert got == book
 
 
@@ -218,7 +218,7 @@ async def test_update_book_success(db, user, mock_cache):
     updated = await update_book_service(
         db,
         1,
-        BookUpdate(title="New", author="Ann", description="anything"),
+        BookUpdate(title="New", author="Ann", description="anything", role="admin"),
         user
         )
 

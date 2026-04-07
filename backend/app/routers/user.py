@@ -9,7 +9,7 @@ from app.core.dependencies import get_current_user
 from app.core.decorator.auth import require_auth
 from app.core.decorator.logging import log_route
 from app.core.transactions import commit_or_rollback
-from backend.app.core.auth import require_roles
+from app.core.auth import require_roles
 from app.services.user_service import (
    list_users_service,
    get_user_service,

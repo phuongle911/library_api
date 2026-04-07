@@ -8,7 +8,6 @@ Create Date: 2026-02-14 15:45:45.937524
 from typing import Sequence, Union
 
 from alembic import op
-import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
@@ -39,6 +38,8 @@ def downgrade() -> None:
     op.execute("ALTER TABLE users ALTER COLUMN role DROP DEFAULT")
 
     # Convert varchar -> enum (cast)
-    op.execute("ALTER TABLE users ALTER COLUMN role TYPE user_role USING role:user_role")
+    op.execute(
+        "ALTER TABLE users ALTER COLUMN role TYPE user_role USING role:user_role"
+        )
 
     op.execute("ALTER TABLE users ALTER COLUMN role SET DEFAULT 'user'")

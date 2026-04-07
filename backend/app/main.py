@@ -7,8 +7,6 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.models import user
-from app.models import books
 from app.core.database import engine, Base
 from app.routers.user import user_router
 from app.routers.books import book_router
@@ -17,7 +15,7 @@ from app.routers.library import library_router
 from app.routers.categories import category_router
 from app.routers.borrow import borrow_router
 from app.routers.job import job_router
-#from app.core.logging import setup_logging
+# from app.core.logging import setup_logging
 from app.core.logging_config import setup_logging
 from app.core.request_id import set_request_id, generate_request_id, get_request_id
 from app.middlewares.request_context import RequestContextMiddleware
@@ -55,6 +53,7 @@ app.include_router(library_router, prefix="/api/v1")
 app.include_router(borrow_router, prefix="/api/v1")
 app.include_router(job_router, prefix="/api/v1")
 
+
 @app.on_event("startup")
 async def on_startup():
     # Create database tables
@@ -77,7 +76,10 @@ async def global_exception_handler(request: Request, exc: Exception):
     logger.exception("UNHANDLED_EXCEPTION")
 
     return JSONResponse(
-        status_code = 500,
-        content = {"error": "Internal Server Error", "message": str(exc), "request_id": get_request_id(),
+        status_code=500,
+        content={
+            "error": "Internal Server Error",
+            "message": str(exc),
+            "request_id": get_request_id(),
                    },
     )

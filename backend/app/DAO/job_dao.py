@@ -14,12 +14,12 @@ class JobDAO:
         await db.commit()
         await db.refresh(job)
         return job
-    
+
     @staticmethod
     async def get_by_id(db: AsyncSession, job_id: int) -> Job | None:
         result = await db.execute(select(Job).where(Job.id == job_id))
         return result.scalars().first()
-    
+
     @staticmethod
     async def get_pending_job(db: AsyncSession) -> Job | None:
         result = await db.execute(
@@ -28,7 +28,7 @@ class JobDAO:
             .limit(1)
         )
         return result.scalars().first()
-    
+
     @staticmethod
     async def get_next_runnable_job(db):
         result = await db.execute(
@@ -40,5 +40,3 @@ class JobDAO:
             .with_for_update(skip_locked=True)
             )
         return result.scalars().first()
-    
-

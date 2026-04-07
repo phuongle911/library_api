@@ -9,6 +9,7 @@ from app.models.user import User
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
+
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     db: AsyncSession = Depends(get_db),

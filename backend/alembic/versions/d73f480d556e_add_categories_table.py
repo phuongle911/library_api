@@ -9,7 +9,6 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = 'd73f480d556e'
@@ -23,10 +22,10 @@ def upgrade() -> None:
     op.create_table(
        "categories",
        sa.Column("id", sa.Integer(), nullable=False),
-       sa.Column("name",sa.String(length=100), nullable=False),
+       sa.Column("name", sa.String(length=100), nullable=False),
        sa.Column("description", sa.Text(), nullable=True),
        sa.PrimaryKeyConstraint("id", name=op.f("categories_pkey"))
-   )
+    )
     op.create_index(op.f("ix_categories_id"), "categories", ["id"], unique=False)
     op.create_index(op.f("ix_categories_name"), "categories", ["name"], unique=True)
 

@@ -5,8 +5,8 @@ from fastapi import HTTPException, status
 import hashlib
 
 pwd_context = CryptContext(
-    schemes=["argon2"], 
-             deprecated="auto",
+    schemes=["argon2"],
+    deprecated="auto",
              )
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 REFRESH_TOKEN_EXPIRE_DAYS = 7
@@ -15,7 +15,7 @@ SECRET_KEY = "super-secrett-key"
 
 
 def _prehash(password: str) -> str:
-# fixed-length string (64 hex chars)
+    # fixed-length string (64 hex chars)
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
 
@@ -31,7 +31,9 @@ def create_access_token(data: dict):
     to_encode = data.copy()
     to_encode.update(
         {
-            "exp": datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES), 
+            "exp": datetime.now(timezone.utc) + timedelta(
+                minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+                ),
             "type": "access"
             }
             )
@@ -42,7 +44,9 @@ def create_refresh_token(data: dict):
     to_encode = data.copy()
     to_encode.update(
         {
-            "exp": datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+            "exp": datetime.now(timezone.utc) + timedelta(
+                days=REFRESH_TOKEN_EXPIRE_DAYS
+                ),
             "type": "refresh",
         }
     )
@@ -54,8 +58,11 @@ def decode_token(token: str) -> dict:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM],)
         return payload
     except jwt.JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")  
-    
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+            )
+
 
 def hash_refresh_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()

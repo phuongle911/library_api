@@ -4,20 +4,22 @@ from logging.config import fileConfig
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
+
+from app.core.database import Base  # adjust if your path is different
+
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 # :white_check_mark: import Base + models so autogenerate can "see" tables
-from app.core.database import Base  # adjust if your path is different
-from app.models.user import User
-from app.models.books import Book
-from app.models.categories import Category
-from app.models.refresh_token import RefreshToken
-from app.models.borrow_record import BorrowRecord
+
 
 target_metadata = Base.metadata
+
+
 def get_url() -> str:
     return os.getenv("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+
+
 def run_migrations_offline() -> None:
     url = get_url()
     context.configure(
@@ -29,6 +31,8 @@ def run_migrations_offline() -> None:
     )
     with context.begin_transaction():
         context.run_migrations()
+
+
 def do_run_migrations(connection):
     context.configure(
         connection=connection,
@@ -37,6 +41,8 @@ def do_run_migrations(connection):
     )
     with context.begin_transaction():
         context.run_migrations()
+
+
 async def run_migrations_online() -> None:
     configuration = config.get_section(config.config_ini_section) or {}
     configuration["sqlalchemy.url"] = get_url()

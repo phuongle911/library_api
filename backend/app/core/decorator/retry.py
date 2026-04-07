@@ -2,6 +2,7 @@ from functools import wraps
 from typing import Callable, Awaitable, Any, Type
 import asyncio
 
+
 def retry_async(
         attempts: int = 3,
         delay_seconds: float = 0.25,

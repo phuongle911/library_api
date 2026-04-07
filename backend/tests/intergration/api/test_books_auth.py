@@ -7,15 +7,24 @@ from app.models.user import User
 from app.models.books import Book
 from app.models.categories import Category
 from app.schemas.books import BookUpdate
-from app.services.book_service import(
+from app.services.book_service import (
     update_book_service,
     delete_book_service,
 )
 
+
 @pytest.mark.asyncio
 async def test_update_book_other_user_forbidden(async_session: AsyncSession):
-    owner = User(email=f"owner-{uuid.uuid4()}@test.com", hashed_password="x", role="user")
-    other = User(email=f"other-{uuid.uuid4()}@test.com", hashed_password="x", role="user")
+    owner = User(
+        email=f"owner-{uuid.uuid4()}@test.com",
+        hashed_password="x",
+        role="user"
+        )
+    other = User(
+        email=f"other-{uuid.uuid4()}@test.com",
+        hashed_password="x",
+        role="user"
+        )
 
     category = Category(name=f"Fiction-{uuid.uuid4()}")
     async_session.add_all([owner, other, category])
@@ -40,8 +49,16 @@ async def test_update_book_other_user_forbidden(async_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_update_book_admin_success(async_session: AsyncSession):
-    owner = User(email=f"owner-{uuid.uuid4()}@test.com", hashed_password="x", role="user")
-    admin = User(email=f"admin-{uuid.uuid4()}@test.com", hashed_password="x", role="admin")
+    owner = User(
+        email=f"owner-{uuid.uuid4()}@test.com",
+        hashed_password="x",
+        role="user"
+        )
+    admin = User(
+        email=f"admin-{uuid.uuid4()}@test.com",
+        hashed_password="x",
+        role="admin"
+        )
 
     category = Category(name=f"Fiction-{uuid.uuid4()}")
     async_session.add_all([owner, admin, category])
@@ -64,7 +81,11 @@ async def test_update_book_admin_success(async_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_update_book_owner_success(async_session: AsyncSession):
-    owner = User(email=f"owner-{uuid.uuid4()}@test.com", hashed_password="x", role="user")
+    owner = User(
+        email=f"owner-{uuid.uuid4()}@test.com",
+        hashed_password="x",
+        role="user"
+        )
 
     category = Category(name=f"Fiction-{uuid.uuid4()}")
     async_session.add_all([owner, category])
@@ -86,10 +107,14 @@ async def test_update_book_owner_success(async_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_delete_book_owner_success(async_session: AsyncSession):
-    owner = User(email=f"owner-{uuid.uuid4()}@test.com", hashed_password="x", role="user")
+    owner = User(
+        email=f"owner-{uuid.uuid4()}@test.com",
+        hashed_password="x",
+        role="user"
+        )
 
     category = Category(name=f"Fiction-{uuid.uuid4()}")
-    async_session.add_all([owner,category])
+    async_session.add_all([owner, category])
     await async_session.commit()
     await async_session.refresh(owner)
     await async_session.refresh(category)
@@ -105,8 +130,16 @@ async def test_delete_book_owner_success(async_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_delete_book_admin_success(async_session: AsyncSession):
-    owner = User(email=f"owner-{uuid.uuid4()}@test.com", hashed_password="x", role="user")
-    admin = User(email=f"admin-{uuid.uuid4()}@test.com", hashed_password="x", role="admin")
+    owner = User(
+        email=f"owner-{uuid.uuid4()}@test.com",
+        hashed_password="x",
+        role="user"
+        )
+    admin = User(
+        email=f"admin-{uuid.uuid4()}@test.com",
+        hashed_password="x",
+        role="admin"
+        )
 
     category = Category(name=f"Fiction-{uuid.uuid4()}")
     async_session.add_all([owner, admin, category])
@@ -127,8 +160,16 @@ async def test_delete_book_admin_success(async_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_delete_book_other_user_forbidden(async_session: AsyncSession):
-    owner = User(email=f"owner-{uuid.uuid4()}@test.com", hashed_password="x", role="user")
-    other = User(email=f"other-{uuid.uuid4()}@test.com", hashed_password="x", role="user")
+    owner = User(
+        email=f"owner-{uuid.uuid4()}@test.com",
+        hashed_password="x",
+        role="user"
+        )
+    other = User(
+        email=f"other-{uuid.uuid4()}@test.com",
+        hashed_password="x",
+        role="user"
+        )
 
     category = Category(name=f"Fiction-{uuid.uuid4()}")
     async_session.add_all([owner, other, category])

@@ -14,17 +14,25 @@ def require_roles(*allowed_roles: str):
                         request = a
                         break
                     if request is None:
-                        raise RuntimeError("require_roles decorator needs 'request: Request' in endpoint signature")
-                    
+                        raise RuntimeError(
+                            "require_roles decorator needs 'request: "
+                            "Request' in endpoint signature"
+                            )
+
                     user = getattr(request.state, "user", None)
                     if not user:
-                        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-                    
+                        raise HTTPException(
+                            status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Not authenticated"
+                            )
+
                     role = user.get("role")
                     if role not in allowed_roles:
-                        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
-                    
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Forbidden"
+                            )
+
                     return await fn(*args, **kwargs)
                 return wrapper
-            return decorator 
-
+            return decorator

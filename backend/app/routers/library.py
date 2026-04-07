@@ -17,7 +17,7 @@ async def create_book_with_log(
     payload: CreateBookWithLogIn,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    ):
+      ):
     data = BookCreate(
         title=payload.title,
         description=payload.description,

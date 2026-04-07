@@ -4,6 +4,8 @@ from sqlalchemy import select
 from app.core.database import AsyncSessionLocal
 from app.models.user import User
 from app.models.books import Book
+from app.models.categories import Category
+from app.models.borrow_record import BorrowRecord
 
 
 async def seed():
@@ -22,23 +24,45 @@ async def seed():
             )
             session.add(user)
             await session.flush()
-        # 2) Create books linked to this user (owner_id NOT NULL)
-        books = [
-            Book(
-                title="Clean Code",
-                description=None,
-                author="Robert C. Martin",
-                owner_id=user.id
-                ),
-            Book(
-                title="The Pragmatic Programmer",
-                description=None,
-                author="Andrew Hunt",
-                owner_id=user.id
-                ),
-        ]
-        session.add_all(books)
-        await session.commit()
-        print(f"Seeded user_id={user.id} and {len(books)} books")
+        # 2) Create categories
+        categories_data = [
+            {"name": "Programming", "description": "Coding books"},
+            {"name": "Fiction", "description": "Story books"},
+            ]
+        categories = []
+        for data in categories_data:
+            result = await session.execute(
+                select(Category).where(Category.name == data["name"])
+            )
+            category = result.scalar_one_or_none()
+            if not category:
+                category = Category(**data)
+                session.add(category)
+                await session.flush()
+            categories.append(category)
+        # 3) Create books linked to this user (owner_id NOT NULL)
+        books = []
+        for i, category in enumerate(categories):
+            book = Book(
+                title=f"Book {i+1}",
+                author="Author",
+                description="Sample book",
+                owner_id=user.id,
+                category_id=category.id,
+            )
+            session.add(book)
+            books.append(book)
+
+            await session.flush()
+
+            for book in books:
+                borrow = BorrowRecord(
+                    user_id=user.id,
+                    book_id=book.id,
+                    status="borrowed",  # important field
+                )
+                session.add_all(books)
+                await session.commit()
+                print(f"Seeded user_id={user.id} and {len(books)} books")
 if __name__ == "__main__":
     asyncio.run(seed())

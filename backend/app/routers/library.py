@@ -21,10 +21,11 @@ async def create_book_with_log(
     data = BookCreate(
         title=payload.title,
         description=payload.description,
-        author=payload.author
+        author=payload.author,
+        category_id=payload.category_id,
         )
     book = await service.create_book_with_log(
-        db,
-        data,
-        current_user.id)
+        db=db,
+        data=data,
+        owner_id=current_user.id)
     return {"book_id": book.id}

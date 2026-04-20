@@ -43,9 +43,9 @@ async def get_borrow_history(
       ):
     return await get_borrow_history_service(
         db=db,
-        status=status,
-        limit=limit,
-        offset=offset,
+        #status=status,
+        #limit=limit,
+        #offset=offset,
         )
 
 

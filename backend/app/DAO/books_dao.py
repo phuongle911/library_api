@@ -93,11 +93,21 @@ class BooksDAO:
     #     return book
 
     @staticmethod
-    async def create(db: AsyncSession, book: Book) -> Book:
-        db.add(book)
-        await commit_or_rollback(db)
-        await db.refresh(book)
-        return book
+    async def create(self, db, data, owner_id):
+        try:
+            book = Book(
+                title=data.title,
+                description=data.description,
+                author=data.author,
+                category_id=data.category_id,
+                owner_id=owner_id,
+            )
+            db.add(book)
+            await db.commit()
+            await db.refresh(book)
+            return book
+        except Exception as exc:
+            print(f"Error creating book: {exc}")
 
     @staticmethod
     async def update(db: AsyncSession, book: Book, payload: BookUpdate) -> Book:

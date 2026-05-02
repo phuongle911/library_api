@@ -52,9 +52,11 @@ async def create_book_service(
     try:
         created_book = await BooksDAO.create(db, book)
     except Exception as exc:
+        print("error_spot", type(current_user))
         logger.exception(
-            "books.create.db_error",
-            extra={"user_id": current_user},
+            "books.create.db_error %s",
+            str(exc),
+            #extra={"user_id": current_user},
         )
         raise map_db_error(exc)
     return created_book

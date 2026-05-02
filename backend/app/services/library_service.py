@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 class LibraryService:
-    def __init__(seft) -> None:
-        seft.books = BooksDAO()
+    def __init__(self) -> None:
+        self.books = BooksDAO()
 
     async def create_book_with_log(
             self,

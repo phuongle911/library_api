@@ -37,21 +37,41 @@ class BorrowRecordsDAO:
         return list(result.scalars().all())
 
     @staticmethod
-    async def get_user_history(db: AsyncSession, user_id: int) -> list[BorrowRecord]:
-        result = await db.execute(
-            select(BorrowRecord)
-            .where(BorrowRecord.user_id == user_id)
-            .order_by(BorrowRecord.borrowed_at.desc())
+    async def get_user_history(
+        db: AsyncSession,
+        user_id: int,
+        record_status: str | None = None,
+        limit: int = 10,
+        offset: int = 0,
+    ) -> list[BorrowRecord]:
+        stmt = select(BorrowRecord).where(BorrowRecord.user_id == user_id)
+        if record_status is not None:
+            stmt = stmt.where(BorrowRecord.status == record_status)
+        stmt = (
+            stmt.order_by(BorrowRecord.borrowed_at.desc())
+            .limit(limit)
+            .offset(offset)
         )
+        result = await db.execute(stmt)
         return list(result.scalars().all())
 
     @staticmethod
-    async def get_book_history(db: AsyncSession, book_id: int) -> list[BorrowRecord]:
-        result = await db.execute(
-            select(BorrowRecord)
-            .where(BorrowRecord.book_id == book_id)
-            .order_by(BorrowRecord.borrowed_at.desc())
+    async def get_book_history(
+        db: AsyncSession,
+        book_id: int,
+        record_status: str | None = None,
+        limit: int = 10,
+        offset: int = 0,
+    ) -> list[BorrowRecord]:
+        stmt = select(BorrowRecord).where(BorrowRecord.book_id == book_id)
+        if record_status is not None:
+            stmt = stmt.where(BorrowRecord.status == record_status)
+        stmt = (
+            stmt.order_by(BorrowRecord.borrowed_at.desc())
+            .limit(limit)
+            .offset(offset)
         )
+        result = await db.execute(stmt)
         return list(result.scalars().all())
 
     @staticmethod

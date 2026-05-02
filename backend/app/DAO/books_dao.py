@@ -7,6 +7,7 @@ from app.models.books import Book
 from app.schemas.books import BookUpdate
 from app.core.decorator.retry import retry_async
 from app.core.transactions import commit_or_rollback
+from app.schemas.books import BookCreate, BookUpdate
 
 
 class BooksDAO:
@@ -84,30 +85,28 @@ class BooksDAO:
         result = await db.execute(query)
         return result.scalars().all()
 
-    # @staticmethod
-    # async def create(db: AsyncSession, payload: BookCreate, owner_id: int) -> Book:
-    #     book = Book(**payload.model_dump(), owner_id=owner_id)
-    #     db.add(book)
-    #     await commit_or_rollback(db)
-    #     await db.refresh(book)
-    #     return book
-
     @staticmethod
-    async def create(self, db, data, owner_id):
-        try:
+    async def create(
+        db: AsyncSession,
+        payload: Book | BookCreate,
+        owner_id: int | None = None,
+    ) -> Book:
+        if isinstance(payload, Book):
+            book = payload
+        else:
+            if owner_id is None:
+                raise ValueError("owner_id is required when creating from BookCreate")
             book = Book(
-                title=data.title,
-                description=data.description,
-                author=data.author,
-                category_id=data.category_id,
+                title=payload.title,
+                description=payload.description,
+                author=payload.author,
+                category_id=payload.category_id,
                 owner_id=owner_id,
             )
-            db.add(book)
-            await db.commit()
-            await db.refresh(book)
-            return book
-        except Exception as exc:
-            print(f"Error creating book: {exc}")
+        db.add(book)
+        await commit_or_rollback(db)
+        await db.refresh(book)
+        return book
 
     @staticmethod
     async def update(db: AsyncSession, book: Book, payload: BookUpdate) -> Book:

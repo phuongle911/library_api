@@ -1,4 +1,5 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException
+from starlette import status as http_status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.DAO.users_dao import UsersDAO
@@ -15,13 +16,13 @@ async def borrow_book_service(
         user = await UsersDAO.get_by_id(db, user_id)
         if not user:
             raise HTTPException(
-                status_code=status.status.HTTP_400_BAD_REQUEST,
+                status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail="User not found",
             )
         book = await BooksDAO.get_by_id_for_update(db, book_id)
         if not book:
             raise HTTPException(
-                status_code=status.status.HTTP_400_BAD_REQUEST,
+                status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail="Book not found",
             )
         active_borrow = await BorrowRecordsDAO.get_active_by_user_and_book(
@@ -31,13 +32,13 @@ async def borrow_book_service(
         )
         if active_borrow:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail="User already has this book borrowed",
             )
 
         if book.available_copies <= 0:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail="No available copies left",
             )
 
@@ -61,9 +62,33 @@ async def get_borrow_history_service(db: AsyncSession):
     return await BorrowRecordsDAO.get_history(db)
 
 
-async def get_user_borrow_history_service(db: AsyncSession, user_id: int):
-    return await BorrowRecordsDAO.get_user_history(db, user_id)
+async def get_user_borrow_history_service(
+    db: AsyncSession,
+    user_id: int,
+    status: str | None = None,
+    limit: int = 10,
+    offset: int = 0,
+):
+    return await BorrowRecordsDAO.get_user_history(
+        db,
+        user_id,
+        record_status=status,
+        limit=limit,
+        offset=offset,
+    )
 
 
-async def get_book_borrow_history_service(db: AsyncSession, book_id: int):
-    return await BorrowRecordsDAO.get_book_history(db, book_id)
+async def get_book_borrow_history_service(
+    db: AsyncSession,
+    book_id: int,
+    status: str | None = None,
+    limit: int = 10,
+    offset: int = 0,
+):
+    return await BorrowRecordsDAO.get_book_history(
+        db,
+        book_id,
+        record_status=status,
+        limit=limit,
+        offset=offset,
+    )

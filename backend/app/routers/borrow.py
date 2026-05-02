@@ -65,7 +65,8 @@ async def get_user_borrow_history(
         user_id=user_id,
         status=status,
         limit=limit,
-        offset=offset,)
+        offset=offset,
+    )
 
 
 @borrow_router.get(
@@ -84,4 +85,5 @@ async def get_book_borrow_history(
         book_id=book_id,
         status=status,
         limit=limit,
-        offset=offset,)
+        offset=offset,
+    )

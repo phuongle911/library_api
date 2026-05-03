@@ -7,7 +7,6 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.core.database import engine, Base
 from app.routers.user import user_router
 from app.routers.books import book_router
 from app.routers.auth import auth_router
@@ -52,13 +51,6 @@ app.include_router(category_router, prefix="/api/v1")
 app.include_router(library_router, prefix="/api/v1")
 app.include_router(borrow_router, prefix="/api/v1")
 app.include_router(job_router, prefix="/api/v1")
-
-
-@app.on_event("startup")
-async def on_startup():
-    # Create database tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
 
 
 @app.middleware("http")

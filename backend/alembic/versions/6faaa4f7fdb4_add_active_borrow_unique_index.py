@@ -1,7 +1,7 @@
 """add active borrow unique index
 
 Revision ID: 6faaa4f7fdb4
-Revises: 58cb85b776e9
+Revises: a1b2c3d4e5f0
 Create Date: 2026-05-02 14:42:56.907821
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = '6faaa4f7fdb4'
-down_revision: Union[str, Sequence[str], None] = '58cb85b776e9'
+down_revision: Union[str, Sequence[str], None] = 'a1b2c3d4e5f0'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

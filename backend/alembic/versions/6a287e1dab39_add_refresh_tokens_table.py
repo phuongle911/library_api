@@ -1,6 +1,6 @@
 """add refresh_tokens table
 Revision ID: 6a287e1dab39
-Revises: 8286af72d372
+Revises: f236895ff63d
 Create Date: 2026-01-30 19:23:53.791332
 """
 from typing import Sequence, Union
@@ -8,7 +8,7 @@ from alembic import op
 import sqlalchemy as sa
 # revision identifiers, used by Alembic.
 revision: str = "6a287e1dab39"
-down_revision: Union[str, Sequence[str], None] = "8286af72d372"
+down_revision: Union[str, Sequence[str], None] = "f236895ff63d"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -22,7 +22,7 @@ def upgrade() -> None:
             primary_key=True,
             nullable=False
             ),
-        sa.Column("user_id", sa.dialects.postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("token_hash", sa.String(), nullable=False),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("revoked_at", sa.DateTime(timezone=True), nullable=True),

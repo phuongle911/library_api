@@ -1,9 +1,6 @@
-from datetime import datetime
-from sqlalchemy import Column, ForeignKey, DateTime, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-import uuid
 
 from app.core.database import Base
 
@@ -11,9 +8,16 @@ from app.core.database import Base
 class BorrowRecord(Base):
     __tablename__ = "borrow_records"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    book_id = Column(UUID(as_uuid=True), ForeignKey("books.id", ondelete="CASCADE"), nullable=False)
-    borrowed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    book_id = Column(Integer, ForeignKey("books.id", ondelete="CASCADE"), nullable=False)
+    status = Column(String, nullable=False, default="borrowed")
+    borrowed_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
     returned_at = Column(DateTime(timezone=True), nullable=True)
-    #_table_args_ = (UniqueConstraint("user_id", "book_id", "returned_at", name="uq_active_borrow_per_user_book"),)
+
+    user = relationship("User", back_populates="borrow_records")
+    book = relationship("Book", back_populates="borrow_records")

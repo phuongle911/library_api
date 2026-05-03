@@ -22,7 +22,7 @@ def upgrade() -> None:
             primary_key=True,
             nullable=False
             ),
-        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("user_id", sa.dialects.postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("token_hash", sa.String(), nullable=False),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("revoked_at", sa.DateTime(timezone=True), nullable=True),

@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from starlette import status as http_status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 
 from app.DAO.users_dao import UsersDAO
 from app.DAO.books_dao import BooksDAO
@@ -12,46 +13,52 @@ async def borrow_book_service(
         book_id: int,
         user_id: int,
 ):
-    async with db.begin():
-        user = await UsersDAO.get_by_id(db, user_id)
-        if not user:
-            raise HTTPException(
-                status_code=http_status.HTTP_400_BAD_REQUEST,
-                detail="User not found",
+    try:
+        async with db.begin():
+            user = await UsersDAO.get_by_id(db, user_id)
+            if not user:
+                raise HTTPException(
+                    status_code=http_status.HTTP_400_BAD_REQUEST,
+                    detail="User not found",
+                )
+            book = await BooksDAO.get_by_id_for_update(db, book_id)
+            if not book:
+                raise HTTPException(
+                    status_code=http_status.HTTP_400_BAD_REQUEST,
+                    detail="Book not found",
+                )
+            active_borrow = await BorrowRecordsDAO.get_active_by_user_and_book(
+                db=db,
+                user_id=user_id,
+                book_id=book_id,
             )
-        book = await BooksDAO.get_by_id_for_update(db, book_id)
-        if not book:
-            raise HTTPException(
-                status_code=http_status.HTTP_400_BAD_REQUEST,
-                detail="Book not found",
+            if active_borrow:
+                raise HTTPException(
+                    status_code=http_status.HTTP_400_BAD_REQUEST,
+                    detail="User already has this book borrowed",
+                )
+
+            if book.available_copies <= 0:
+                raise HTTPException(
+                    status_code=http_status.HTTP_400_BAD_REQUEST,
+                    detail="No available copies left",
+                )
+
+            book.available_copies -= 1
+
+            borrow_record = await BorrowRecordsDAO.create(
+                db=db,
+                user_id=user_id,
+                book_id=book_id,
             )
-        active_borrow = await BorrowRecordsDAO.get_active_by_user_and_book(
-            db=db,
-            user_id=user_id,
-            book_id=book_id,
+
+            await db.refresh(borrow_record)
+            return borrow_record
+    except IntegrityError:
+        raise HTTPException(
+            status_code=http_status.HTTP_409_CONFLICT,
+            detail="Borrow request conflicts with existing data",
         )
-        if active_borrow:
-            raise HTTPException(
-                status_code=http_status.HTTP_400_BAD_REQUEST,
-                detail="User already has this book borrowed",
-            )
-
-        if book.available_copies <= 0:
-            raise HTTPException(
-                status_code=http_status.HTTP_400_BAD_REQUEST,
-                detail="No available copies left",
-            )
-
-        book.available_copies -= 1
-
-        borrow_record = await BorrowRecordsDAO.create(
-            db=db,
-            user_id=user_id,
-            book_id=book_id,
-        )
-
-        await db.refresh(borrow_record)
-        return borrow_record
 
 
 async def get_active_borrows_service(db: AsyncSession):

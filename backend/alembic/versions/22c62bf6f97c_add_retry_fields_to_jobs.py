@@ -1,7 +1,7 @@
 """add retry fields to jobs
 
 Revision ID: 22c62bf6f97c
-Revises: 91c79067aa44
+Revises: cafef00d0001
 Create Date: 2026-03-28 14:12:16.015584
 
 """
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = '22c62bf6f97c'
-down_revision: Union[str, Sequence[str], None] = '91c79067aa44'
+down_revision: Union[str, Sequence[str], None] = 'cafef00d0001'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

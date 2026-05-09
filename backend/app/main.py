@@ -25,8 +25,10 @@ from app.core.exception_handlers import (
     unhandled_exception_handler,
 )
 from app.core.errors import AppError
+from app.middlewares.performance import PerformanceMiddleware
 
 setup_logging()
+logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 sentry_sdk.init(
     dsn=os.getenv("SENTRY_DNS"),
@@ -37,6 +39,7 @@ sentry_sdk.init(
 
 app = FastAPI(title="My FastAPI App")
 app.add_middleware(RequestContextMiddleware)
+app.add_middleware(PerformanceMiddleware)
 
 
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)

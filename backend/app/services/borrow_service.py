@@ -6,27 +6,47 @@ from sqlalchemy.exc import IntegrityError
 from app.DAO.users_dao import UsersDAO
 from app.DAO.books_dao import BooksDAO
 from app.DAO.borrow_records_dao import BorrowRecordsDAO
+from app.DAO.idempotency_dao import IdempotencyDAO
 
 
 async def borrow_book_service(
-        db: AsyncSession,
-        book_id: int,
-        user_id: int,
+    db: AsyncSession,
+    book_id: int,
+    user_id: int,
+    idempotency_key: str | None = None,
 ):
     try:
+        # 1. Check if this request was already completed
+        if idempotency_key:
+            existing_key = await IdempotencyDAO.get(db, idempotency_key)
+
+            if existing_key and existing_key.status == "completed":
+                return existing_key.response
+
         async with db.begin():
+            idempotency_record = None
+
+            # 2. Save key as processing
+            if idempotency_key:
+                idempotency_record = await IdempotencyDAO.create_processing(
+                    db=db,
+                    key=idempotency_key,
+                )
+
             user = await UsersDAO.get_by_id(db, user_id)
             if not user:
                 raise HTTPException(
                     status_code=http_status.HTTP_400_BAD_REQUEST,
                     detail="User not found",
                 )
+
             book = await BooksDAO.get_by_id_for_update(db, book_id)
             if not book:
                 raise HTTPException(
                     status_code=http_status.HTTP_400_BAD_REQUEST,
                     detail="Book not found",
                 )
+
             active_borrow = await BorrowRecordsDAO.get_active_by_user_and_book(
                 db=db,
                 user_id=user_id,
@@ -52,8 +72,23 @@ async def borrow_book_service(
                 book_id=book_id,
             )
 
-            await db.refresh(borrow_record)
-            return borrow_record
+            response = {
+                "borrow_record_id": str(borrow_record.id),
+                "book_id": str(book_id),
+                "user_id": str(user_id),
+                "status": "borrowed",
+            }
+
+            # 3. Save final response against idempotency key
+            if idempotency_record:
+                await IdempotencyDAO.mark_completed(
+                    db=db,
+                    record=idempotency_record,
+                    response=response,
+                )
+
+        return response
+
     except IntegrityError:
         raise HTTPException(
             status_code=http_status.HTTP_409_CONFLICT,

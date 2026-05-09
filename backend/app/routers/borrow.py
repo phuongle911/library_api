@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Header
 from typing import Literal
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,16 +16,18 @@ from app.services.borrow_service import (
 borrow_router = APIRouter(prefix="/borrow", tags=["Borrow"])
 
 
-@borrow_router.post("/books/{book_id}", response_model=BorrowRecordResponse)
+@borrow_router.post("/books/{book_id}")
 async def borrow_book(
     book_id: int,
     payload: BorrowBookRequest,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     db: AsyncSession = Depends(get_db),
 ):
     return await borrow_book_service(
         db=db,
         book_id=book_id,
         user_id=payload.user_id,
+        idempotency_key=idempotency_key,
     )
 
 

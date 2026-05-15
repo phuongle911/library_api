@@ -26,6 +26,7 @@ from app.core.exception_handlers import (
 )
 from app.core.errors import AppError
 from app.middlewares.performance import PerformanceMiddleware
+from app.core.rate_limit import check_rate_limit
 
 setup_logging()
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
@@ -60,6 +61,7 @@ app.include_router(job_router, prefix="/api/v1")
 async def add_request_id_middleware(request: Request, call_next):
     request_id = request.headers.get("X-Request-ID") or generate_request_id()
     set_request_id(request_id)
+    await check_rate_limit(request.client.host)
 
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id

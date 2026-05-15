@@ -51,6 +51,7 @@ async def create_book_service(
 
     try:
         created_book = await BooksDAO.create(db, book)
+        invalidate_books_list_cache(user_id=current_user.id)
     except Exception as exc:
         print("error_spot", type(current_user))
         logger.exception(

@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import or_
 from datetime import datetime
 
 from app.models.job import Job
@@ -30,13 +31,20 @@ class JobDAO:
         return result.scalars().first()
 
     @staticmethod
-    async def get_next_runnable_job(db):
-        result = await db.execute(
+    async def get_next_runnable_job(db: AsyncSession):
+        stm = (
             select(Job)
-            .where(Job.status == "pending")
-            .where(Job.next_run_at <= datetime.utcnow())
-            .order_by(Job.created_at.asc())
-            .limit(1)
+            .where(
+                Job.status == "pending",
+                or_(
+                Job.next_run_at.is_(None),
+                Job.next_run_at <= datetime.utcnow(),
+                ),
+                )
+            .order_by(Job.created_at)
             .with_for_update(skip_locked=True)
+            .limit(1)
             )
-        return result.scalars().first()
+
+        result = await db.execute(stm)
+        return result.scalar_one_or_none()

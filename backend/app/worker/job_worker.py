@@ -68,9 +68,15 @@ async def worker_loop():
             job = await JobDAO.get_next_runnable_job(db)
 
             if job:
-                await process_job(job, db)
-
-        await asyncio.sleep(2)  # polling interval
+                try:
+                    await asyncio.wait_for(process_job(job, db), timeout=30,)
+                except asyncio.TimeoutError:
+                    logger.error("JOB_TIMEOUT", extra={"job_id": job.id})
+                    job.status = "failed"
+                    job.error = "Job timed out"
+                    await db.commit()
+                
+                await asyncio.sleep(2)
 
 
 if __name__ == "__main__":

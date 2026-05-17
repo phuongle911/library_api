@@ -27,15 +27,16 @@ from app.core.exception_handlers import (
 from app.core.errors import AppError
 from app.middlewares.performance import PerformanceMiddleware
 from app.core.rate_limit import check_rate_limit
+from app.core.config import settings
 
 setup_logging()
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 sentry_sdk.init(
-    dsn=os.getenv("SENTRY_DNS"),
+    dsn=settings.SENTRY_DNS,
     integrations=[FastApiIntegration()],
     traces_sample_rate=1.0,
-    environment=os.getenv("APP_ENV", "development"),
+    environment=settings.APP_ENV,
 )
 
 app = FastAPI(title="My FastAPI App")

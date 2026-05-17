@@ -19,7 +19,6 @@ class TransientJobError(Exception):
 
 async def process_job(job, db: AsyncSession):
     try:
-        print("JOB_STARTED", job.id)
         logger.info("JOB_STARTED", extra={"job_id": job.id})
 
         job.status = "processing"
@@ -68,7 +67,6 @@ async def worker_loop():
         async with AsyncSessionLocal() as db:
             job = await JobDAO.get_next_runnable_job(db)
 
-            print("JOB_FOUND", job)
 
             if job:
                 try:

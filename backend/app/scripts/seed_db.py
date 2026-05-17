@@ -63,6 +63,5 @@ async def seed():
                 )
                 session.add_all(books)
                 await session.commit()
-                print(f"Seeded user_id={user.id} and {len(books)} books")
 if __name__ == "__main__":
     asyncio.run(seed())

@@ -22,7 +22,6 @@ async def test_endpoint_requires_authentication(client):
 @pytest.mark.asyncio
 async def test_list_books_with_auth(client, auth_headers):
     response = await client.get("/api/v1/books", headers=auth_headers)
-    print("Error", response)
     assert response.status_code == 200
 
     data = response.json()

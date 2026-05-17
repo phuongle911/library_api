@@ -68,7 +68,6 @@ async def test_get_job_status_return_not_found_for_invalid_job(
 
     assert response.status_code == 404
     data = response.json()
-    print(f"error spot {data}")
 
     assert "error" in data
     error = data["error"]

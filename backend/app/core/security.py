@@ -3,15 +3,18 @@ from datetime import datetime, timedelta, timezone
 from jose import jwt
 from fastapi import HTTPException, status
 import hashlib
+import os
+
+from app.core.config import settings
 
 pwd_context = CryptContext(
     schemes=["argon2"],
     deprecated="auto",
              )
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
-REFRESH_TOKEN_EXPIRE_DAYS = 7
-ALGORITHM = "HS256"
-SECRET_KEY = "super-secrett-key"
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
+REFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS
+ALGORITHM = settings.ALGORITHM
+SECRET_KEY = settings.SECRET_KEY
 
 
 def _prehash(password: str) -> str:

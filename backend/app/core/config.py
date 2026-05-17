@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@db:5432/app_db"
     SENTRY_DNS: str = "https://abc123@o123456.ingest.sentry.io/987654"
     APP_ENV: str = "development"
+    SQL_ECHO: bool = False
 
     class Config:
         env_file = ".env"

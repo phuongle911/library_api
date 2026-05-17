@@ -14,6 +14,7 @@ from app.routers.library import library_router
 from app.routers.categories import category_router
 from app.routers.borrow import borrow_router
 from app.routers.job import job_router
+from app.routers.health import health_router
 # from app.core.logging import setup_logging
 from app.core.logging_config import setup_logging
 from app.core.request_id import set_request_id, generate_request_id, get_request_id
@@ -56,6 +57,7 @@ app.include_router(category_router, prefix="/api/v1")
 app.include_router(library_router, prefix="/api/v1")
 app.include_router(borrow_router, prefix="/api/v1")
 app.include_router(job_router, prefix="/api/v1")
+app.include_router(health_router, prefix="/api/v1")
 
 
 @app.middleware("http")

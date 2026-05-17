@@ -2,7 +2,7 @@ import logging
 import sentry_sdk
 import os
 from sentry_sdk.integrations.fastapi import FastApiIntegration
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -61,7 +61,17 @@ app.include_router(job_router, prefix="/api/v1")
 async def add_request_id_middleware(request: Request, call_next):
     request_id = request.headers.get("X-Request-ID") or generate_request_id()
     set_request_id(request_id)
-    await check_rate_limit(request.client.host)
+    try:
+        await check_rate_limit(request.client.host)
+    except HTTPException as exc:
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "error": "Too Many Requests",
+                "message": exc.detail,
+                "request_id": get_request_id,
+            },
+        )
 
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id

@@ -19,6 +19,7 @@ class TransientJobError(Exception):
 
 async def process_job(job, db: AsyncSession):
     try:
+        print("JOB_STARTED", job.id)
         logger.info("JOB_STARTED", extra={"job_id": job.id})
 
         job.status = "processing"
@@ -61,16 +62,24 @@ async def process_job(job, db: AsyncSession):
 
         await db.commit()
 
-
+POLL_INTERVAL_SECONDS = 2
 async def worker_loop():
     while True:
         async with AsyncSessionLocal() as db:
             job = await JobDAO.get_next_runnable_job(db)
 
-            if job:
-                await process_job(job, db)
+            print("JOB_FOUND", job)
 
-        await asyncio.sleep(2)  # polling interval
+            if job:
+                try:
+                    await asyncio.wait_for(process_job(job, db), timeout=30,)
+                except asyncio.TimeoutError:
+                    logger.error("JOB_TIMEOUT", extra={"job_id": job.id})
+                    job.status = "failed"
+                    job.error = "Job timed out"
+                    await db.commit()
+                
+        await asyncio.sleep(POLL_INTERVAL_SECONDS)
 
 
 if __name__ == "__main__":

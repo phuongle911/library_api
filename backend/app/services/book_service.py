@@ -53,7 +53,6 @@ async def create_book_service(
         created_book = await BooksDAO.create(db, book)
         invalidate_books_list_cache(user_id=current_user.id)
     except Exception as exc:
-        print("error_spot", type(current_user))
         logger.exception(
             "books.create.db_error %s",
             str(exc),
@@ -107,7 +106,6 @@ async def list_books_service(
     )
     if cached is not None:
         return cached
-    # print("error_spot", type(current_user))
     # cached = None
     # await db.execute("INVALID SQL")
     try:

@@ -29,7 +29,6 @@ class BooksDAO:
         page: int = 1,
         page_size: int = 10,
     ) -> tuple[list[Book], int]:
-        print("DAO list_by_owner_paginated() called")
         filters = [Book.owner_id == owner_id]
         if title:
             filters.append(Book.title.ilike(f"%{title}%"))
@@ -68,7 +67,6 @@ class BooksDAO:
         author: str | None = None,
         sort_by: str | None = None,
     ) -> list[Book]:
-        print("DAO list_by_owner() called")
         query = select(Book).where(Book.owner_id == owner_id)
         if title:
             query = query.where(Book.title.ilike(f"%{title}%"))

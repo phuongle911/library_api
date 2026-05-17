@@ -7,5 +7,4 @@ async def commit_or_rollback(db: AsyncSession):
         await db.commit()
     except SQLAlchemyError as exc:
         await db.rollback()
-        print("REAL DB ERROR:", repr(exc))
         raise

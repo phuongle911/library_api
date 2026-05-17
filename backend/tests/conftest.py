@@ -11,11 +11,7 @@ from unittest.mock import Mock
 from app.main import app
 from app.core.database import Base, get_db
 from app.models.user import User
-
-TEST_DATABASE_URL = (
-    os.getenv("TEST_DATABASE_URL")
-    or "postgresql+asyncpg://postgres:postgres@localhost/test_db"
-)
+from app.core.config import getenv, settings
 
 
 @pytest.fixture(scope="session")
@@ -26,7 +22,7 @@ def anyio_backend():
 @pytest_asyncio.fixture(scope="session")
 async def prepare_test_database():
     engine = create_async_engine(
-        TEST_DATABASE_URL,
+        settings.TEST_DATABASE_URL,
         future=True,
         poolclass=NullPool,
     )
@@ -41,7 +37,7 @@ async def prepare_test_database():
 @pytest_asyncio.fixture
 async def async_engine(prepare_test_database):
     engine = create_async_engine(
-        TEST_DATABASE_URL,
+        settings.TEST_DATABASE_URL,
         future=True,
         poolclass=NullPool,
     )
@@ -123,7 +119,6 @@ async def auth_headers(client):
         "/api/v1/auth/login",
         json={"email": email, "password": password},
     )
-    print(f"Login response: {login_response.status_code}, {login_response.text}")
     token = login_response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 

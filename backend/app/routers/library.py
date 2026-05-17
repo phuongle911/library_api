@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, logger, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -38,4 +38,7 @@ async def create_book_with_log(
             owner_id=current_user.id)
         return {"book_id": book.id}
     except Exception as exc:
-        print("error_spot", type(current_user))
+        logger.exception(
+            "library.create_book_with_log.error %s", exc,
+            extra={"user_id": current_user.id},
+        )

@@ -3,8 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.schemas.user import UserCreate, UserLogin, RefreshTokenSchema
-from app.services.auth_serivice import user_login, user_signup
-
+from app.services.auth_serivice import user_login, user_signup, refresh_access_token
 from app.core.security import (
   create_access_token,
   create_refresh_token,
@@ -55,31 +54,9 @@ async def refresh(
     payload: RefreshTokenSchema,
     db: AsyncSession = Depends(get_db)
       ):
-    token = payload.refresh_token
-    decoded = decode_token(token)
-    if decoded.get("type") != "refresh":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token type"
-            )
-    token_hash = hash_refresh_token(token)
-    row = await get_refresh_token_by_hash(db, token_hash)
-    if not row:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="invalid refresh token"
-            )
-    if row.revoked_at is not None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    if row.expires_at <= datetime.now(timezone.utc):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Refresh token expired"
-            )
-    email = decoded["sub"]
-    access_token = create_access_token({"sub": email})
-    return {"access_token": access_token, "token_type": "bearer"}
-
+    
+    return await refresh_access_token(db, payload.refresh_token)
+   
 
 @auth_router.post("/logout")
 async def logout(payload: RefreshTokenSchema, db: AsyncSession = Depends(get_db)):

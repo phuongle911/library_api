@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
+from app.core.database import get_db, get_read_db
 from app.schemas.categories import CategoryCreate, CategoryResponse, CategoryUpdate
 from app.services.categories_service import (
     create_category_service,
@@ -27,7 +27,7 @@ async def list_categories(
     name: str | None = Query(default=None),
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_read_db),
 ):
     return await list_categories_service(db=db, name=name, limit=limit, offset=offset,)
 
@@ -37,7 +37,7 @@ async def list_categories(
         response_model=CategoryResponse,
         status_code=status.HTTP_200_OK,
         )
-async def get_category_by_id(category_id: int, db: AsyncSession = Depends(get_db),):
+async def get_category_by_id(category_id: int, db: AsyncSession = Depends(get_read_db),):
     return await get_category_by_id_service(db, category_id)
 
 
@@ -49,7 +49,7 @@ async def get_category_by_id(category_id: int, db: AsyncSession = Depends(get_db
 async def update_category(
     category_id: int,
     payload: CategoryUpdate,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_read_db),
       ):
     return await update_category_service(db, category_id, payload)
 

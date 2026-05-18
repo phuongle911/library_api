@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.DAO.job_dao import JobDAO
-from app.core.database import get_db
+from app.core.database import get_db, get_read_db
 
 job_router = APIRouter()
 
@@ -22,7 +22,7 @@ async def generate_document(payload: dict, db: AsyncSession = Depends(get_db)):
 
 
 @job_router.get("/jobs/{job_id}")
-async def get_job(job_id: int, db: AsyncSession = Depends(get_db)):
+async def get_job(job_id: int, db: AsyncSession = Depends(get_read_db)):
     job = await JobDAO.get_by_id(db, job_id)
     if not job:
         return {"error": "Job not found"}

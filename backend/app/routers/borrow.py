@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, Header
 from typing import Literal
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
+from app.core.database import get_db, get_read_db
 from app.schemas.borrow import BorrowBookRequest, BorrowRecordResponse
 from app.services.borrow_service import (
     borrow_book_service,
@@ -32,7 +32,7 @@ async def borrow_book(
 
 
 @borrow_router.get("/active", response_model=list[BorrowRecordResponse])
-async def get_active_borrows(db: AsyncSession = Depends(get_db)):
+async def get_active_borrows(db: AsyncSession = Depends(get_read_db)):
     return await get_active_borrows_service(db)
 
 
@@ -41,7 +41,7 @@ async def get_borrow_history(
     status: Literal["borrowed_at", "returned_at"] | None = None,
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_read_db),
       ):
     return await get_borrow_history_service(
         db=db,
@@ -60,7 +60,7 @@ async def get_user_borrow_history(
     status: Literal["borrowed", "returned"] | None = None,
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_read_db),
       ):
     return await get_user_borrow_history_service(
         db=db,
@@ -80,7 +80,7 @@ async def get_book_borrow_history(
     status: Literal["borrowed", "returned"] | None = None,
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_read_db),
       ):
     return await get_book_borrow_history_service(
         db=db,

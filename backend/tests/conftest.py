@@ -7,11 +7,19 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 from unittest.mock import Mock
+from sqlalchemy import text
 
 from app.main import app
 from app.core.database import Base, get_db
 from app.models.user import User
 from app.core.config import settings
+from app.core.rate_limit import reset_rate_limit
+from app.models.books import Book
+from app.models.categories import Category
+from app.models.borrow_record import BorrowRecord
+from app.models.refresh_token import RefreshToken
+from app.models.idempotency_key import IdempotencyKey
+from app.models.job import Job
 
 
 @pytest.fixture(scope="session")
@@ -19,8 +27,38 @@ def anyio_backend():
     return "asyncio"
 
 
+@pytest.fixture(autouse=True)
+def clear_rate_limit_state():
+    reset_rate_limit()
+    yield
+    reset_rate_limit()
+
+async def _ensure_test_database_exists() -> None:
+    test_url = settings.TEST_DATABASE_URL
+    admin_url = test_url.rsplit("/", 1)[0] + "/postgres"
+    db_name = test_url.rsplit("/", 1)[-1]
+
+    engine = create_async_engine(
+        admin_url,
+        future=True,
+        poolclass=NullPool,
+        isolation_level="AUTOCOMMIT",
+        )
+    try:
+        async with engine.connect() as conn:
+            exists = await conn.scalar(
+                text("SELECT 1 FROM pg_database WHERE datname = :name"),
+                {"name": db_name},
+            )
+            if exists is None:
+                await conn.execute(text(f'CREATE DATABASE "{db_name}"'))
+    finally:
+        await engine.dispose()
+
+
 @pytest_asyncio.fixture(scope="session")
 async def prepare_test_database():
+    await _ensure_test_database_exists()
     engine = create_async_engine(
         settings.TEST_DATABASE_URL,
         future=True,
@@ -32,6 +70,18 @@ async def prepare_test_database():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
+
+
+async def _truncate_all_tables(engine) -> None:
+    table_names = ", ".join(
+        f'"{table.name}"' for table in Base.metadata.sorted_tables
+    )
+    if not table_names:
+        return
+    async with engine.begin() as conn:
+        await conn.execute(
+            text(f"TRUNCATE {table_names} RESTART IDENTITY CASCADE")
+        )
 
 
 @pytest_asyncio.fixture
@@ -57,6 +107,7 @@ async def async_session(async_engine):
     async with AsyncSessionLocal() as session:
         yield session
         await session.rollback()
+    await _truncate_all_tables(async_engine)
 
 
 @pytest_asyncio.fixture

@@ -37,7 +37,10 @@ async def list_categories(
         response_model=CategoryResponse,
         status_code=status.HTTP_200_OK,
         )
-async def get_category_by_id(category_id: int, db: AsyncSession = Depends(get_read_db),):
+async def get_category_by_id(
+    category_id: int,
+    db: AsyncSession = Depends(get_read_db),
+     ):
     return await get_category_by_id_service(db, category_id)
 
 

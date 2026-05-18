@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from app.models.user import User
 from app.schemas.user import UserUpdate, UserResponse
-from app.core.database import get_db
+from app.core.database import get_db, get_read_db
 from app.core.dependencies import get_current_user
 from app.core.decorator.auth import require_auth
 from app.core.decorator.logging import log_route
@@ -39,7 +39,7 @@ async def list_users(
    name: str | None = None,
    email: str | None = None,
    sort_by: str | None = None,
-   db: AsyncSession = Depends(get_db),
+   db: AsyncSession = Depends(get_read_db),
    current_user: User = Depends(get_current_user),
 ):
     return await list_users_service(
@@ -54,7 +54,7 @@ async def list_users(
 @user_router.get("/users/{user_id}", response_model=UserResponse, status_code=200)
 async def get_user(
    user_id: int,
-   db: AsyncSession = Depends(get_db),
+   db: AsyncSession = Depends(get_read_db),
    current_user: User = Depends(get_current_user),
 ):
     return await get_user_service(db, user_id, current_user)

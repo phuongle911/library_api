@@ -2,7 +2,7 @@ import logging
 from fastapi import APIRouter, Depends, Query  # API library
 from sqlalchemy.ext.asyncio import AsyncSession  # database library
 from app.schemas.books import BookCreate, BookUpdate, BookResponse  # schemas/DTO layer
-from app.core.database import get_db  # DB/engine layer
+from app.core.database import get_db, get_read_db  # DB/engine layer
 from app.services.book_service import (
     create_book_service,
     get_book_service,
@@ -38,7 +38,7 @@ async def list_books(
     sort_dir: str = Query(default="desc"),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=10, ge=1, le=100),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_read_db),
     current_user: User = Depends(get_current_user),
 ):
     return await list_books_service(
@@ -57,7 +57,7 @@ async def list_books(
 @book_router.get("/books/{book_id}", response_model=BookResponse, status_code=200)
 async def get_book(
     book_id: int,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_read_db),
     current_user: User = Depends(get_current_user)
       ):
     return await get_book_service(book_id, db, current_user)

@@ -68,11 +68,10 @@ async def add_request_id_middleware(request: Request, call_next):
         await check_rate_limit(request.client.host)
     except HTTPException as exc:
         return JSONResponse(
-            status_code=exc.status_code,
+            status_code=500,
             content={
-                "error": "Too Many Requests",
-                "message": exc.detail,
-                "request_id": get_request_id,
+                "detail": "Internal server error",
+                "request_id": get_request_id(),
             },
         )
 

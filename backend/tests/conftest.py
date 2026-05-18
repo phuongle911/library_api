@@ -11,7 +11,7 @@ from unittest.mock import Mock
 from app.main import app
 from app.core.database import Base, get_db
 from app.models.user import User
-from app.core.config import getenv, settings
+from app.core.config import settings
 
 
 @pytest.fixture(scope="session")

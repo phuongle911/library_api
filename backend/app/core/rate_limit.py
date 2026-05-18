@@ -6,6 +6,11 @@ REQUESTS = {}
 MAX_REQUESTS = 5
 WINDOW_SECONDS = 60
 
+
+def reset_rate_limit() -> None:
+    REQUESTS.clear()
+
+    
 async def check_rate_limit(ip: str):
     now = time.time()
 
@@ -25,4 +30,3 @@ async def check_rate_limit(ip: str):
     requests.append(now)
 
     REQUESTS[ip] = requests
-    

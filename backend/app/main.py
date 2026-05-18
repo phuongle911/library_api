@@ -70,9 +70,8 @@ async def add_request_id_middleware(request: Request, call_next):
         return JSONResponse(
             status_code=exc.status_code,
             content={
-                "error": "Too Many Requests",
-                "message": exc.detail,
-                "request_id": get_request_id,
+                "detail": exc.detail,
+                "request_id": get_request_id(),
             },
         )
 

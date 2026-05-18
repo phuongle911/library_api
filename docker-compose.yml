@@ -10,23 +10,47 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  backend:
+
+  backend-1:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
     depends_on:
       - db  
     volumes:
       - ./backend:/app
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/app_db
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     env_file:
       - .env
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+
+  backend-2:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      - db  
+    volumes:
+      - ./backend:/app
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/app_db
+    env_file:
+      - .env
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8000:80"
+    depends_on:
+      - backend-1
+      - backend-2
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
 
 volumes:
-     postgres_data:
-
-
+    postgres_data:

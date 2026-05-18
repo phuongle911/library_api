@@ -1,3 +1,4 @@
+import socket
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,4 +26,7 @@ async def ready(db: AsyncSession = Depends(get_db)):
 
 @health_router.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "host": socket.gethostname(),
+        }

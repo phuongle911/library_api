@@ -45,8 +45,6 @@ services:
     depends_on:
       - backend-1
       - backend-2
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
 
 
 volumes:

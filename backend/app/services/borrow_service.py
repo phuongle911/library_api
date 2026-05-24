@@ -4,13 +4,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timezone
 
+from app.domain.services.return_domain_service import ReturnDomainService
+from app.domain.services.borrow_domain_service import BorrowDomainService
 from app.domain.events.dispatcher import dispatch_domain_event
 from app.domain.events.book_borrowed import BookBorrowed
 from app.domain.events.book_returned import BookReturned
-from app.DAO.users_dao import UsersDAO
-from app.DAO.books_dao import BooksDAO
-from app.DAO.borrow_records_dao import BorrowRecordsDAO
 from app.DAO.idempotency_dao import IdempotencyDAO
+from app.infrastructure.repositories.user_repository import UserRepository
+from app.infrastructure.repositories.book_repository import BookRepository
+from app.infrastructure.repositories.borrow_reposiyoty import BorrowRepository
 
 
 async def borrow_book_service(
@@ -37,40 +39,40 @@ async def borrow_book_service(
                     key=idempotency_key,
                 )
 
-            user = await UsersDAO.get_by_id(db, user_id)
+            user = await UserRepository.get_by_id(db, user_id)
             if not user:
                 raise HTTPException(
                     status_code=http_status.HTTP_400_BAD_REQUEST,
                     detail="User not found",
                 )
 
-            book = await BooksDAO.get_by_id_for_update(db, book_id)
+            book = await BookRepository.get_by_id_for_update(db, book_id)
             if not book:
                 raise HTTPException(
                     status_code=http_status.HTTP_400_BAD_REQUEST,
                     detail="Book not found",
                 )
 
-            active_borrow = await BorrowRecordsDAO.get_active_by_user_and_book(
+            active_borrow = await BorrowRepository.get_active_by_user_and_book(
                 db=db,
                 user_id=user_id,
                 book_id=book_id,
             )
-            if active_borrow:
-                raise HTTPException(
-                    status_code=http_status.HTTP_400_BAD_REQUEST,
-                    detail="User already has this book borrowed",
+            try:
+                BorrowDomainService.validate_can_borrow(
+                    active_borrow=active_borrow,
+                    available_copies=book.available_copies,
                 )
 
-            if book.available_copies <= 0:
+            except ValueError as e:
                 raise HTTPException(
                     status_code=http_status.HTTP_400_BAD_REQUEST,
-                    detail="No available copies left",
+                    detail=str(e),
                 )
 
             book.available_copies -= 1
 
-            borrow_record = await BorrowRecordsDAO.create(
+            borrow_record = await BorrowRepository.create(
                 db=db,
                 user_id=user_id,
                 book_id=book_id,
@@ -157,19 +159,16 @@ async def return_book_service(
             borrow_record_id=borrow_record_id,
         )
 
-        if not borrow_record:
-            raise HTTPException(
-                status_code=http_status.HTTP_404_NOT_FOUND,
-                detail="Borrow record not found",
-            )
-        
-        if borrow_record.returned_at is not None:
+        try:
+            ReturnDomainService.validate_can_ruturn(borrow_record)
+
+        except ValueError as e:
             raise HTTPException(
                 status_code=http_status.HTTP_400_BAD_REQUEST,
-                detail="Book already returned",
+                detail=str(e),
             )
         
-        book = await BooksDAO.get_by_id_for_update(
+        book = await BookRepository.get_by_id_for_update(
             db=db,
             book_id=borrow_record.book_id,
             )

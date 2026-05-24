@@ -11,7 +11,7 @@ class IdempotencyDAO:
             select(IdempotencyKey).where(IdempotencyKey.key == key)
         )
         return result.scalar_one_or_none()
-    
+
     @staticmethod
     async def create_processing(db: AsyncSession, key: str):
         record = IdempotencyKey(
@@ -21,7 +21,7 @@ class IdempotencyDAO:
         db.add(record)
         await db.flush()
         return record
-    
+
     @staticmethod
     async def mark_completed(db: AsyncSession, record: IdempotencyKey, response: dict):
         record.status = "completed"

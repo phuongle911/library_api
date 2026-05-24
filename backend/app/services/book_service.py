@@ -1,4 +1,5 @@
 import logging
+from time import time
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
@@ -19,6 +20,34 @@ from app.core.permissions import require_owner_or_admin
 import math
 
 logger = logging.getLogger("app.books")
+BOOKS_LIST_CACHE = {}
+CACHE_TTL_SECONDS = 30
+
+
+def get_books_cache_key(page: int, page_size: int):
+    return f"books:list:page={page}:size={page_size}"
+
+
+def get_books_from_cache(key: str):
+    cached = BOOKS_LIST_CACHE.get(key)
+    if not cached:
+        return None
+
+    if cached["expires_at"] < time.time():
+        BOOKS_LIST_CACHE.pop(key, None)
+        return None
+    return cached["data"]
+
+
+def set_books_cache(key: str, data):
+    BOOKS_LIST_CACHE[key] = {
+        "data": data,
+        "expires_at": time.time() + CACHE_TTL_SECONDS,
+    }
+
+
+def clear_books_cache():
+    BOOKS_LIST_CACHE.clear()
 
 
 async def create_book_service(
@@ -56,7 +85,7 @@ async def create_book_service(
         logger.exception(
             "books.create.db_error %s",
             str(exc),
-            #extra={"user_id": current_user},
+            # extra={"user_id": current_user},
         )
         raise map_db_error(exc)
     return created_book

@@ -19,5 +19,5 @@ class LibraryService:
             owner_id: int,
     ):
         book = await self.books.create(db, data, owner_id)
-        #logger.info("book_created owner_id=%s book_id=%s", owner_id, book.id)
+        # logger.info("book_created owner_id=%s book_id=%s", owner_id, book.id)
         return book

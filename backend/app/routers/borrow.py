@@ -11,7 +11,7 @@ from app.services.borrow_service import (
     get_user_borrow_history_service,
     get_book_borrow_history_service,
 )
-
+from app.application.use_cases.borrow_book import BorrowBookUseCase
 
 borrow_router = APIRouter(prefix="/borrow", tags=["Borrow"])
 
@@ -23,8 +23,9 @@ async def borrow_book(
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     db: AsyncSession = Depends(get_db),
 ):
-    return await borrow_book_service(
-        db=db,
+    print(f"Text: {payload}")
+    use_case = BorrowBookUseCase(db)
+    return await use_case.execute(
         book_id=book_id,
         user_id=payload.user_id,
         idempotency_key=idempotency_key,

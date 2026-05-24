@@ -2,7 +2,10 @@ from fastapi import HTTPException
 from starlette import status as http_status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
+from datetime import datetime, timezone
 
+from app.domain.events.dispatcher import dispatch_domain_event
+from app.domain.events.book_borrowed import BookBorrowed
 from app.DAO.users_dao import UsersDAO
 from app.DAO.books_dao import BooksDAO
 from app.DAO.borrow_records_dao import BorrowRecordsDAO
@@ -87,6 +90,13 @@ async def borrow_book_service(
                     response=response,
                 )
 
+        event = BookBorrowed(
+            user_id=user_id,
+            book_id=book_id,
+            borrowed_at=datetime.now(timezone.utc),
+        )
+
+        await dispatch_domain_event(event)
         return response
 
     except IntegrityError:

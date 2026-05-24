@@ -88,3 +88,13 @@ class BorrowRecordsDAO:
             )
         )
         return result.scalars().first()
+
+
+    @staticmethod
+    async def get_by_id_for_update(db: AsyncSession, borrow_record_id: int):
+        result = await db.execute(
+            select(BorrowRecord)
+            .where(BorrowRecord.id == borrow_record_id)
+            .with_for_update()
+        )
+        return result.scalar_one_or_none()

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db, get_read_db
 from app.schemas.borrow import BorrowBookRequest, BorrowRecordResponse
 from app.services.borrow_service import (
+    return_book_service,
     borrow_book_service,
     get_active_borrows_service,
     get_borrow_history_service,
@@ -89,4 +90,15 @@ async def get_book_borrow_history(
         status=status,
         limit=limit,
         offset=offset,
+    )
+
+
+@borrow_router.post("/records/{borrow_record_id}/return")
+async def return_book(
+    borrow_record_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    return await return_book_service(
+        db=db,
+        borrow_record_id=borrow_record_id,
     )

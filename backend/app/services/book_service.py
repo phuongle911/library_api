@@ -2,7 +2,10 @@ import logging
 from time import time
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
+from datetime import datetime, timezone
 
+from app.domain.events.book_returned import BookReturned
+from app.domain.events.dispatcher import dispatch_domain_event
 from app.schemas.books import BookCreate, BookUpdate
 from app.models.books import Book
 from app.models.user import User

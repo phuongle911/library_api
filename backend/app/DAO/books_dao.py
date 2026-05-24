@@ -4,7 +4,6 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import selectinload
 
 from app.models.books import Book
-from app.schemas.books import BookUpdate
 from app.core.decorator.retry import retry_async
 from app.core.transactions import commit_or_rollback
 from app.schemas.books import BookCreate, BookUpdate

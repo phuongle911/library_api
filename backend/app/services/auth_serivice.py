@@ -49,7 +49,7 @@ async def refresh_access_token(db: AsyncSession, refresh_token: str):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token type",
         )
-    
+
     token_hash = hash_refresh_token(refresh_token)
     row = await get_refresh_token_by_hash(db, token_hash)
 
@@ -58,21 +58,21 @@ async def refresh_access_token(db: AsyncSession, refresh_token: str):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token",
         )
-    
+
     if row.revoked_at is not None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token revoked",
         )
-    
+
     if row.expires_at <= datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token expired",
         )
-    
+
     email = decoded["sub"]
-    access_token = create_access_token({"sub":email})
+    access_token = create_access_token({"sub": email})
 
     return {
         "access_token": access_token,

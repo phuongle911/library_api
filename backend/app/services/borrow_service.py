@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 from app.domain.events.dispatcher import dispatch_domain_event
 from app.domain.events.book_borrowed import BookBorrowed
+from app.domain.events.book_returned import BookReturned
 from app.DAO.users_dao import UsersDAO
 from app.DAO.books_dao import BooksDAO
 from app.DAO.borrow_records_dao import BorrowRecordsDAO
@@ -144,3 +145,57 @@ async def get_book_borrow_history_service(
         limit=limit,
         offset=offset,
     )
+
+
+async def return_book_service(
+        db: AsyncSession,
+        borrow_record_id: int,
+):
+    async with db.begin():
+        borrow_record = await BorrowRecordsDAO.get_by_id_for_update(
+            db=db,
+            borrow_record_id=borrow_record_id,
+        )
+
+        if not borrow_record:
+            raise HTTPException(
+                status_code=http_status.HTTP_404_NOT_FOUND,
+                detail="Borrow record not found",
+            )
+        
+        if borrow_record.returned_at is not None:
+            raise HTTPException(
+                status_code=http_status.HTTP_400_BAD_REQUEST,
+                detail="Book already returned",
+            )
+        
+        book = await BooksDAO.get_by_id_for_update(
+            db=db,
+            book_id=borrow_record.book_id,
+            )
+        
+        if not book:
+            raise HTTPException(
+                status_code=http_status.HTTP_404_BAD_REQUEST,
+                detail="Book not found",
+            )
+        
+        borrow_record.returned_at = datetime.now(timezone.utc)
+        book.available_copies += 1
+
+        response = {
+            "borrow_record_id": str(borrow_record.id),
+            "book_id": str(borrow_record.book_id),
+            "user_id": str(borrow_record.user_id),
+            "status": "returned",
+        }
+
+        event = BookReturned(
+            user_id=borrow_record.user_id,
+            book_id=borrow_record.book_id,
+            borrow_record_id=borrow_record.id,
+            returned_at=borrow_record.returned_at,
+        )
+
+        await dispatch_domain_event(event)
+        return response

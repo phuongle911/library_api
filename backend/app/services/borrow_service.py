@@ -12,7 +12,7 @@ from app.domain.events.book_returned import BookReturned
 from app.DAO.idempotency_dao import IdempotencyDAO
 from app.infrastructure.repositories.user_repository import UserRepository
 from app.infrastructure.repositories.book_repository import BookRepository
-from app.infrastructure.repositories.borrow_reposiyoty import BorrowRepository
+from app.infrastructure.repositories.borrow_repository import BorrowRepository
 
 
 async def borrow_book_service(

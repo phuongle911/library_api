@@ -10,7 +10,7 @@ from unittest.mock import Mock
 from sqlalchemy import text
 
 from app.main import app
-from app.core.database import Base, get_db
+from app.core.database import Base, get_db, get_read_db
 from app.models.user import User
 from app.core.config import settings
 from app.core.rate_limit import reset_rate_limit
@@ -115,7 +115,11 @@ async def client(async_session):
     async def override_get_db():
         yield async_session
 
+    async def override_get_read_db():
+        yield async_session
+
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_read_db] = override_get_read_db
 
     async with AsyncClient(
         transport=ASGITransport(app=app),

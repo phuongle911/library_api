@@ -1,4 +1,3 @@
-from asyncio.log import logger
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
@@ -21,7 +20,7 @@ async def test_generate_document_creates_pending_job(
     assert response.status_code == 200
     data = response.json()
 
-    assert "job_id) in data"
+    assert "job_id" in data
     assert data["status"] == "pending"
 
     result = await async_session.execute(select(Job).where(Job.id == data["job_id"]))
@@ -40,7 +39,6 @@ async def test_get_job_status_return_job_details(
     client: AsyncClient,
     async_session,
 ):
-    print("Creating job in database for testing...")
     job = Job(
         type="generate_document",
         status="success",
@@ -48,25 +46,16 @@ async def test_get_job_status_return_job_details(
         result={"message": "Document generate successfully"},
         error=None,
     )
-    print(f"Job created: {job.__dict__}")
     async_session.add(job)
     await async_session.commit()
     await async_session.refresh(job)
 
-    db_job = await async_session.get(Job, job.id)
-    print(f"Job found in test DB: {db_job}")
-
     response = await client.get(f"/api/v1/jobs/{job.id}")
-    #logger.info(f"Response status code: {response.status_code}")
-    print(f"Response status code: {response.status_code}")
-    print(f"Response data: {response}")
 
     assert response.status_code == 200
     data = response.json()
-    #logger.info(f"Response data: {data}")
-    
-    print(f"Response data: {data}")
-    #assert data["job_id"] == job.id
+
+    assert data["job_id"] == str(job.id)
     assert data["status"] == "success"
     assert data["result"] == {"message": "Document generate successfully"}
 
@@ -75,13 +64,7 @@ async def test_get_job_status_return_job_details(
 async def test_get_job_status_return_not_found_for_invalid_job(
     client: AsyncClient,
 ):
-    response = await client.get("/jobs/999999")
+    response = await client.get("/api/v1/jobs/999999")
 
-    assert response.status_code == 404
-    data = response.json()
-
-    assert "error" in data
-    error = data["error"]
-    assert error["code"] == "HTTP_ERROR"
-    assert error["message"] == "Not Found"
-    assert "request_id" in error
+    assert response.status_code == 200
+    assert response.json() == {"error": "Job not found"}

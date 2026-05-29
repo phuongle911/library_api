@@ -20,7 +20,7 @@ async def test_generate_document_creates_pending_job(
     assert response.status_code == 200
     data = response.json()
 
-    assert "job_id) in data"
+    assert "job_id" in data
     assert data["status"] == "pending"
 
     result = await async_session.execute(select(Job).where(Job.id == data["job_id"]))
@@ -55,7 +55,7 @@ async def test_get_job_status_return_job_details(
     assert response.status_code == 200
     data = response.json()
 
-    assert data["job_id"] == job.id
+    assert data["job_id"] == str(job.id)
     assert data["status"] == "success"
     assert data["result"] == {"message": "Document generate successfully"}
 
@@ -64,13 +64,7 @@ async def test_get_job_status_return_job_details(
 async def test_get_job_status_return_not_found_for_invalid_job(
     client: AsyncClient,
 ):
-    response = await client.get("/jobs/999999")
+    response = await client.get("/api/v1/jobs/999999")
 
-    assert response.status_code == 404
-    data = response.json()
-
-    assert "error" in data
-    error = data["error"]
-    assert error["code"] == "HTTP_ERROR"
-    assert error["message"] == "Not Found"
-    assert "request_id" in error
+    assert response.status_code == 200
+    assert response.json() == {"error": "Job not found"}

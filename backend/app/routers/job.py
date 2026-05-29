@@ -28,7 +28,8 @@ async def get_job(job_id: int, db: AsyncSession = Depends(get_read_db)):
         return {"error": "Job not found"}
 
     return {
-        "job_id": job.id,
+        "job_id": str(job.id),
         "status": job.status,
         "result": job.result,
+        "error": job.error,
     }

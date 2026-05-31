@@ -7,12 +7,11 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.routers.user import user_router
-from app.routers.books import book_router
-from app.routers.auth import auth_router
+from app.modules.user_service.routes import auth_router
+from app.modules.book_service.routes import book_router
 from app.routers.library import library_router
 from app.routers.categories import category_router
-from app.routers.borrow import borrow_router
+from app.modules.borrow_service.routes import borrow_router
 from app.routers.job import job_router
 from app.routers.health import health_router
 # from app.core.logging import setup_logging
@@ -50,9 +49,8 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(AppError, app_error_handler)
 app.add_exception_handler(Exception, unhandled_exception_handler)
 
-app.include_router(user_router, prefix="/api/v1")
-app.include_router(book_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(book_router, prefix="/api/v1")
 app.include_router(category_router, prefix="/api/v1")
 app.include_router(library_router, prefix="/api/v1")
 app.include_router(borrow_router, prefix="/api/v1")

@@ -10,13 +10,13 @@ from app.core.decorator.auth import require_auth
 from app.core.decorator.logging import log_route
 from app.core.transactions import commit_or_rollback
 from app.core.auth import require_roles
-from app.services.user_service import (
+from backend.app.modules.user_service.user_service import (
    list_users_service,
    get_user_service,
    update_user_service,
    delete_user_service,
 )
-from app.DAO.users_dao import UsersDAO
+from backend.app.modules.user_service.users_dao import UsersDAO
 from app.core.errors import AppError
 
 

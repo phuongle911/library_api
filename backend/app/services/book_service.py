@@ -6,10 +6,10 @@ from datetime import datetime, timezone
 
 from app.domain.events.book_returned import BookReturned
 from app.domain.events.dispatcher import dispatch_domain_event
-from app.modules.book_service.schemas import BookCreate, BookUpdate
+from backend.app.modules.book_service.books import BookCreate, BookUpdate
 from app.models.books import Book
 from app.models.user import User
-from app.modules.book_service.repository import BooksDAO
+from backend.app.modules.book_service.books_dao import BooksDAO
 from app.DAO.categories_dao import CategoriesDAO
 from app.core.cache import (
     get_books_list_cache,

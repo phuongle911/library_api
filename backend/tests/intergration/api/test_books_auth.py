@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
 from app.models.books import Book
 from app.models.categories import Category
-from app.schemas.books import BookUpdate
-from app.services.book_service import (
+from backend.app.modules.book_service.books import BookUpdate
+from backend.app.modules.book_service.book_service import (
     update_book_service,
     delete_book_service,
 )

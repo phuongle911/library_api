@@ -1,4 +1,4 @@
-from app.DAO.borrow_records_dao import BorrowRecordsDAO
+from app.modules.borrow_service.repository import BorrowRecordsDAO
 
 
 class BorrowRepository:

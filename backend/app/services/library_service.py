@@ -1,8 +1,8 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.DAO.books_dao import BooksDAO
-from app.schemas.books import BookCreate
+from app.modules.book_service.repository import BooksDAO
+from app.modules.book_service.schemas import BookCreate
 
 
 logger = logging.getLogger(__name__)

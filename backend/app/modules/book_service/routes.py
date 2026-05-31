@@ -1,9 +1,9 @@
 import logging
 from fastapi import APIRouter, Depends, Query  # API library
 from sqlalchemy.ext.asyncio import AsyncSession  # database library
-from app.schemas.books import BookCreate, BookUpdate, BookResponse  # schemas/DTO layer
+from app.modules.book_service.schemas import BookCreate, BookUpdate, BookResponse  # schemas/DTO layer
 from app.core.database import get_db, get_read_db  # DB/engine layer
-from app.services.book_service import (
+from app.modules.book_service.service import (
     create_book_service,
     get_book_service,
     list_books_service,

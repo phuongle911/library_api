@@ -4,15 +4,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timezone
 
+from app.modules.borrow_service.repository import BorrowRepository
+from app.modules.borrow_service.clients.user_client import UserClient
+from app.modules.borrow_service.clients.book_client import BookClient
 from app.domain.services.return_domain_service import ReturnDomainService
 from app.domain.services.borrow_domain_service import BorrowDomainService
 from app.domain.events.dispatcher import dispatch_domain_event
 from app.domain.events.book_borrowed import BookBorrowed
 from app.domain.events.book_returned import BookReturned
 from app.DAO.idempotency_dao import IdempotencyDAO
-from app.infrastructure.repositories.user_repository import UserRepository
-from app.infrastructure.repositories.book_repository import BookRepository
-from app.infrastructure.repositories.borrow_repository import BorrowRepository
 
 
 async def borrow_book_service(
@@ -39,14 +39,19 @@ async def borrow_book_service(
                     key=idempotency_key,
                 )
 
-            user = await UserRepository.get_by_id(db, user_id)
+            user_client = UserClient()
+            book_client = BookClient()
+
+            user = await user_client.get_user(db, user_id)
+            book = await book_client.get_book_for_update(db, book_id)
+
             if not user:
                 raise HTTPException(
                     status_code=http_status.HTTP_400_BAD_REQUEST,
                     detail="User not found",
                 )
 
-            book = await BookRepository.get_by_id_for_update(db, book_id)
+
             if not book:
                 raise HTTPException(
                     status_code=http_status.HTTP_400_BAD_REQUEST,
@@ -110,11 +115,11 @@ async def borrow_book_service(
 
 
 async def get_active_borrows_service(db: AsyncSession):
-    return await BorrowRecordsDAO.get_active(db)
+    return await BorrowRepository.get_active(db)
 
 
 async def get_borrow_history_service(db: AsyncSession):
-    return await BorrowRecordsDAO.get_history(db)
+    return await BorrowRepository.get_history(db)
 
 
 async def get_user_borrow_history_service(
@@ -124,7 +129,7 @@ async def get_user_borrow_history_service(
     limit: int = 10,
     offset: int = 0,
 ):
-    return await BorrowRecordsDAO.get_user_history(
+    return await BorrowRepository.get_user_history(
         db,
         user_id,
         record_status=status,
@@ -140,7 +145,7 @@ async def get_book_borrow_history_service(
     limit: int = 10,
     offset: int = 0,
 ):
-    return await BorrowRecordsDAO.get_book_history(
+    return await BorrowRepository.get_book_history(
         db,
         book_id,
         record_status=status,
@@ -154,7 +159,7 @@ async def return_book_service(
         borrow_record_id: int,
 ):
     async with db.begin():
-        borrow_record = await BorrowRecordsDAO.get_by_id_for_update(
+        borrow_record = await BorrowRepository.get_by_id_for_update(
             db=db,
             borrow_record_id=borrow_record_id,
         )
@@ -168,10 +173,11 @@ async def return_book_service(
                 detail=str(e),
             )
         
-        book = await BookRepository.get_by_id_for_update(
-            db=db,
-            book_id=borrow_record.book_id,
-            )
+        user_client = UserClient()
+        book_client = BookClient()
+
+        user = await user_client.get_user(db, user_id)
+        book = await book_client.get_book_for_update(db, book_id)
         
         if not book:
             raise HTTPException(

@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.schemas.library import CreateBookWithLogIn, CreateBookWithLogOut
 from app.services.library_service import LibraryService
-from app.schemas.books import BookCreate
+from app.modules.book_service.schemas import BookCreate
 from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.DAO.categories_dao import CategoriesDAO

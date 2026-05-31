@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
-from app.schemas.user import UserCreate, UserLogin, RefreshTokenSchema
+from app.modules.user_service.schemas import UserCreate, UserLogin, RefreshTokenSchema
 from app.services.auth_serivice import user_login, user_signup, refresh_access_token
 from app.core.security import (
   create_access_token,

@@ -3,8 +3,8 @@ from types import SimpleNamespace
 from fastapi import HTTPException
 from unittest.mock import AsyncMock, Mock
 
-from backend.app.modules.book_service.books import BookCreate, BookUpdate
-from backend.app.modules.book_service.book_service import (
+from app.modules.book_service.schemas import BookCreate, BookUpdate
+from app.modules.book_service.service import (
     create_book_service,
     get_book_service,
     list_books_service,
@@ -63,12 +63,12 @@ def other_user():
 def mock_cache(mocker):
     return {
         "get": mocker.patch(
-            "app.services.book_service.get_books_list_cache",
+            "app.modules.book_service.service.get_books_list_cache",
             return_value=None
             ),
-        "set": mocker.patch("app.services.book_service.set_books_list_cache"),
+        "set": mocker.patch("app.modules.book_service.service.set_books_list_cache"),
         "invalidate": mocker.patch(
-            "app.services.book_service.invalidate_books_list_cache"
+            "app.modules.book_service.service.invalidate_books_list_cache"
             ),
     }
 
@@ -76,7 +76,7 @@ def mock_cache(mocker):
 @pytest.fixture
 def mock_dao(mocker):
     return mocker.patch(
-        "app.services.book_service.BooksDAO.list_by_owner_paginated",
+        "app.modules.book_service.service.BooksDAO.list_by_owner_paginated",
         new=AsyncMock(return_value=([], 0)),
     )
 
@@ -84,12 +84,12 @@ def mock_dao(mocker):
 @pytest.mark.asyncio
 async def test_create_book_title_exists(db, user, mocker):
     mocker.patch(
-        "app.services.book_service.BooksDAO.get_by_title",
+        "app.modules.book_service.service.BooksDAO.get_by_title",
         new=AsyncMock(return_value=make_book()),
     )
 
     mocker.patch(
-        "app.services.book_service.CategoriesDAO.get_by_id",
+        "app.modules.book_service.service.CategoriesDAO.get_by_id",
         new=AsyncMock(return_value=object()),
     )
 
@@ -109,11 +109,11 @@ async def test_create_book_title_exists(db, user, mocker):
 @pytest.mark.asyncio
 async def test_create_book_success(db, user, mock_cache, mocker):
     mocker.patch(
-        "app.services.book_service.CategoriesDAO.get_by_id",
+        "app.modules.book_service.service.CategoriesDAO.get_by_id",
         new=AsyncMock(return_value=object()),
     )
     mocker.patch(
-        "app.services.book_service.BooksDAO.get_by_title",
+        "app.modules.book_service.service.BooksDAO.get_by_title",
         new=AsyncMock(return_value=None),
     )
 
@@ -155,7 +155,7 @@ async def test_get_book_success(db):
 async def test_list_books_cache_hit(db, user, mocker, mock_dao):
     cached = {"items": ["X"], "meta": {"page": 1}}
 
-    mocker.patch("app.services.book_service.get_books_list_cache", return_value=cached)
+    mocker.patch("app.modules.book_service.service.get_books_list_cache", return_value=cached)
 
     result = await list_books_service(db, user, page=1, page_size=10)
     assert result == cached
@@ -165,7 +165,7 @@ async def test_list_books_cache_hit(db, user, mocker, mock_dao):
 @pytest.mark.asyncio
 async def test_list_books_calls_dao_and_sets_cache(db, user, mock_cache, mocker):
     dao = mocker.patch(
-        "app.services.book_service.BooksDAO.list_by_owner_paginated",
+        "app.modules.book_service.service.BooksDAO.list_by_owner_paginated",
         new=AsyncMock(return_value=(["b1", "b2"], 25)),
     )
 

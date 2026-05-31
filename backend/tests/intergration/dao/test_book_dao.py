@@ -2,10 +2,10 @@ import uuid
 
 import pytest
 
-from backend.app.modules.book_service.books_dao import BooksDAO
+from app.modules.book_service.repository import BooksDAO
 from app.models.books import Book
 from app.models.categories import Category
-from backend.app.modules.book_service.books import BookUpdate
+from app.modules.book_service.schemas import BookUpdate
 
 
 @pytest.mark.asyncio

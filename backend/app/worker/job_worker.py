@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 from app.core.database import AsyncSessionLocal
 from app.DAO.job_dao import JobDAO
+from app.workers.outbox_worker import process_outbox_events
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +66,15 @@ POLL_INTERVAL_SECONDS = 2
 async def worker_loop():
     while True:
         async with AsyncSessionLocal() as db:
+
+            # Process outbox events first
+
+            try:
+                await process_outbox_events()
+
+            except Exception as e:
+                logger.exception("OUTBOX_PROCESSING_FAILED", extra={"error": str(e)},)
+                
             job = await JobDAO.get_next_runnable_job(db)
 
 

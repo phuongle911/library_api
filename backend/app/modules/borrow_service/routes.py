@@ -3,8 +3,8 @@ from typing import Literal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db, get_read_db
-from app.schemas.borrow import BorrowBookRequest, BorrowRecordResponse
-from app.services.borrow_service import (
+from app.modules.borrow_service.schemas import BorrowBookRequest, BorrowRecordResponse
+from app.modules.borrow_service.service import (
     return_book_service,
     borrow_book_service,
     get_active_borrows_service,

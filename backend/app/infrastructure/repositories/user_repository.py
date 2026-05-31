@@ -1,4 +1,4 @@
-from app.DAO.users_dao import UsersDAO
+from app.modules.user_service.repository import UsersDAO
 
 class UserRepository:
 

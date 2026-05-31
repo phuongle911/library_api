@@ -1,4 +1,4 @@
-from app.DAO.books_dao import BooksDAO
+from app.modules.book_service.repository import BooksDAO
 
 
 class  BookRepository:

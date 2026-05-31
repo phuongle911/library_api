@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 from app.models.books import Book
 from app.core.decorator.retry import retry_async
 from app.core.transactions import commit_or_rollback
-from app.schemas.books import BookCreate, BookUpdate
+from app.modules.book_service.schemas import BookCreate, BookUpdate
 
 
 class BooksDAO:

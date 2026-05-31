@@ -3,8 +3,8 @@ from types import SimpleNamespace
 from fastapi import HTTPException
 from unittest.mock import AsyncMock, Mock
 
-from app.schemas.books import BookCreate, BookUpdate
-from app.services.book_service import (
+from backend.app.modules.book_service.books import BookCreate, BookUpdate
+from backend.app.modules.book_service.book_service import (
     create_book_service,
     get_book_service,
     list_books_service,

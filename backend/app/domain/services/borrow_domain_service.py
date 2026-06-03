@@ -3,10 +3,10 @@ class BorrowDomainService:
     @staticmethod
     def validate_can_borrow(
         active_borrow,
-        available_copies: int,
+        book,
     ):
         if active_borrow:
-            raise ValueError("User has already borrowed this book")
+            raise ValueError("Book already borrowed by this user")
         
-        if available_copies <= 0:
-            raise ValueError("No available copies left")
+        if not book.is_available:
+            raise ValueError("Book not available")

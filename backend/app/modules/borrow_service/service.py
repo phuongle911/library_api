@@ -13,6 +13,8 @@ from app.domain.events.dispatcher import dispatch_domain_event
 from app.domain.events.book_borrowed import BookBorrowed
 from app.domain.events.book_returned import BookReturned
 from app.DAO.idempotency_dao import IdempotencyDAO
+from app.models.outbox_event import OutboxEvent
+from app.infrastructure.repositories.outbox_repository import OutboxRepository
 
 
 async def borrow_book_service(
@@ -98,13 +100,17 @@ async def borrow_book_service(
                     response=response,
                 )
 
-        event = BookBorrowed(
-            user_id=user_id,
-            book_id=book_id,
-            borrowed_at=datetime.now(timezone.utc),
+        await OutboxRepository.create(
+            db=db,
+            event_type="BookBorrowed",
+            payload={
+                "user_id": user_id,
+                "book_id": book_id,
+                "borrowed_at": datetime.now(timezone.utc).isoformat(),
+            },
         )
 
-        await dispatch_domain_event(event)
+
         return response
 
     except IntegrityError:

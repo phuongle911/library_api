@@ -70,7 +70,7 @@ async def borrow_book_service(
             try:
                 BorrowDomainService.validate_can_borrow(
                     active_borrow=active_borrow,
-                    available_copies=book.available_copies,
+                    book=book,
                 )
 
             except ValueError as e:
@@ -214,3 +214,25 @@ async def return_book_service(
 
         await dispatch_domain_event(event)
         return response
+    
+
+async def check_book_availability_service(
+        db: AsyncSession,
+        book_id: int,
+            ):
+    book_client = BookClient()
+
+    book = await book_client.get_book(db, book_id)
+
+    if not book:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail="Book not found",
+        )
+    
+    return {
+        "book_id": book.id,
+        "title": book.title,
+        "is_available": book.is_available,
+        "available_copies": book.available_copies,
+    }

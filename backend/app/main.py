@@ -12,6 +12,7 @@ from app.modules.book_service.routes import book_router
 from app.routers.library import library_router
 from app.routers.categories import category_router
 from app.modules.borrow_service.routes import borrow_router
+from app.modules.book_service.internal_router import internal_router
 from app.routers.job import job_router
 from app.routers.health import health_router
 # from app.core.logging import setup_logging
@@ -28,6 +29,7 @@ from app.core.errors import AppError
 from app.middlewares.performance import PerformanceMiddleware
 from app.core.rate_limit import check_rate_limit
 from app.core.config import settings
+
 
 setup_logging()
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
@@ -56,6 +58,7 @@ app.include_router(library_router, prefix="/api/v1")
 app.include_router(borrow_router, prefix="/api/v1")
 app.include_router(job_router, prefix="/api/v1")
 app.include_router(health_router, prefix="/api/v1")
+app.include_router(internal_router, prefix="/api/v1")
 
 
 @app.middleware("http")

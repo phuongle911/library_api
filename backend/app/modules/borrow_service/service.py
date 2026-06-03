@@ -41,13 +41,15 @@ async def borrow_book_service(
                     key=idempotency_key,
                 )
 
-            user_client = UserClient()
             book_client = BookClient()
+            user_client = UserClient()
 
-            user = await user_client.get_user(db, user_id)
-            book = await book_client.get_book_for_update(db, book_id)
+            book = await book_client.get_book_for_update(
+                db=db,
+                book_id=book_id,
+            )
 
-            if not user:
+            if not await user_client.get_user(db, user_id):
                 raise HTTPException(
                     status_code=http_status.HTTP_400_BAD_REQUEST,
                     detail="User not found",
@@ -182,12 +184,14 @@ async def return_book_service(
         user_client = UserClient()
         book_client = BookClient()
 
-        user = await user_client.get_user(db, user_id)
-        book = await book_client.get_book_for_update(db, book_id)
+        book = await book_client.get_book_for_update(
+            db=db,
+            book_id=borrow_record.book_id,
+        )
         
         if not book:
             raise HTTPException(
-                status_code=http_status.HTTP_404_BAD_REQUEST,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Book not found",
             )
         

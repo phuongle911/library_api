@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 from app.core.database import AsyncSessionLocal
 from app.DAO.job_dao import JobDAO
-from app.workers.outbox_worker import process_outbox_events
+from app.worker.outbox_worker import process_outbox_events
 
 logger = logging.getLogger(__name__)
 

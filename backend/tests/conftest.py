@@ -184,3 +184,46 @@ def set_execute_first(db, first_value):
     scalars.first.return_value = first_value
     result.scalars.return_value = scalars
     db.execute.return_value = result
+
+
+@pytest.fixture
+async def sample_book(async_session):
+    book = Book(
+        title="Clean Code",
+        available_copies=3,
+    )
+
+    async_session.add(book)
+    await async_session.commit()
+    await async_session.refresh(book)
+
+    return book
+
+
+@pytest.fixture
+async def sample_category(async_session):
+    category = Category(name="Programming")
+
+    async_session.add(category)
+    await async_session.commit()
+    await async_session.refresh(category)
+
+    return category
+
+
+@pytest.fixture
+async def sample_book(async_session, owner_user, sample_category):
+    book = Book(
+        title="Clean Code",
+        description="Software craftsmanship book",
+        author="Robert Martin",
+        owner_id=owner_user.id,
+        category_id=sample_category.id,
+        available_copies=3,
+    )
+
+    async_session.add(book)
+    await async_session.commit()
+    await async_session.refresh(book)
+
+    return book

@@ -6,7 +6,8 @@ async def test_get_internal_book_sucess(
         sample_book,
 ):
     response = await client.get(
-        f"/api/v1/internal/books/{sample_book.id}"
+        f"/api/v1/internal/books/{sample_book.id}",
+        headers={"X-Internal-Token": "dev-internal-token"},
     )
 
     assert response.status_code == http_status.HTTP_200_OK
@@ -19,7 +20,7 @@ async def test_get_internal_book_sucess(
 
 async def test_get_internal_book_without_token_returns_401(client, sample_book):
     response = await client.get(
-        f"/api/v1/internal/books/{sample_book.id}"
+        f"/api/v1/internal/books/{sample_book.id}",
     )
 
     assert response.status_code == http_status.HTTP_401_UNAUTHORIZED

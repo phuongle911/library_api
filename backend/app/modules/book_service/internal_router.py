@@ -4,9 +4,13 @@ from starlette import status as http_status
 
 from app.infrastructure.repositories.book_repository import BookRepository
 from app.core.database import get_db
+from app.internal.auth import verify_internal_token
 
 
-internal_router = APIRouter(prefix="/internal/books", tags=["Internal Books"],)
+internal_router = APIRouter(
+    prefix="/internal/books", tags=["Internal Books"],
+    dependencies = [Depends(verify_internal_token)],
+    )
 
 @internal_router.get("/{book_id}")
 async def get_book_internal(

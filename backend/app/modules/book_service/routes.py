@@ -1,5 +1,7 @@
 import logging
-from fastapi import APIRouter, Depends, Query  # API library
+import httpx
+from starlette import status as http_status
+from fastapi import APIRouter, Depends, Query, HTTPException  # API library
 from sqlalchemy.ext.asyncio import AsyncSession  # database library
 from app.modules.book_service.schemas import BookCreate, BookUpdate, BookResponse  # schemas/DTO layer
 from app.core.database import get_db, get_read_db  # DB/engine layer
@@ -13,6 +15,8 @@ from app.modules.book_service.service import (
 from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, BookOut
+from app.modules.borrow_service.contracts.book_contract import BookContract
+from app.modules.borrow_service.clients.book_client import INTERNAL_API_BASE_URL, INTERNAL_API_TOKEN
 
 
 logger = logging.getLogger("app.books")
@@ -56,11 +60,41 @@ async def list_books(
 
 @book_router.get("/books/{book_id}", response_model=BookResponse, status_code=200)
 async def get_book(
+    self,
+    db,
     book_id: int,
-    db: AsyncSession = Depends(get_read_db),
-    current_user: User = Depends(get_current_user)
-      ):
-    return await get_book_service(book_id, db, current_user)
+) -> BookContract | None:
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(
+                f"{INTERNAL_API_BASE_URL}/internal/books/{book_id}",
+                headers={"X-Internal-Token": INTERNAL_API_TOKEN},
+            )
+
+            if response.status_code == 404:
+                return None
+            
+            response.raise_for_statuc()
+
+    except httpx.TimeoutException:
+        raise HTTPException(
+            status_code=http_status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Book service timeout",
+        )
+    
+    except httpx.RequestError:
+        raise HTTPException(
+            status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Book service unavailable",
+        )
+    
+    data = response.json()
+
+    return BookContract(
+        id=data["id"],
+        title=data["title"],
+        available_copies=data["available_copies"],
+    )
 
 
 @book_router.put("/books/{book_id}", response_model=BookResponse, status_code=200)

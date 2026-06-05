@@ -8,7 +8,7 @@ class BookClient:
         Future:
         GET /books/{id}
         """
-        return await BookRepository.get_by_id_for_update(db, book_id)
+        return await BookRepository.get_by_id(db, book_id)
 
     async def get_book(self, db, book_id: int) -> BookContract | None:
         book = await BookRepository.get_by_id(db, book_id)

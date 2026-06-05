@@ -8,5 +8,5 @@ class BorrowDomainService:
         if active_borrow:
             raise ValueError("Book already borrowed by this user")
         
-        if not book.is_available:
+        if not book.available_copies:
             raise ValueError("Book not available")

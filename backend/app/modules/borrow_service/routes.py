@@ -3,6 +3,7 @@ from typing import Literal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db, get_read_db
+from app.modules.borrow_service.service import check_book_availability_service
 from app.modules.borrow_service.schemas import BorrowBookRequest, BorrowRecordResponse
 from app.modules.borrow_service.service import (
     return_book_service,
@@ -102,3 +103,11 @@ async def return_book(
         db=db,
         borrow_record_id=borrow_record_id,
     )
+
+
+@borrow_router.get("/books/{book_id}/availability")
+async def check_book_availability(
+    book_id: int,
+    db: AsyncSession = Depends(get_read_db),
+):
+    return await check_book_availability_service(db=db, book_id=book_id)

@@ -122,6 +122,30 @@ async def borrow_book_service(
         )
 
 
+async def check_book_availability_service(
+        db: AsyncSession,
+        book_id: int,
+            ):
+    book_client = BookClient()
+    
+    book = await book_client.get_book(
+        db=db,
+        book_id=book_id,
+    )
+
+    if not book:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail="Book not found",
+        )
+    
+    return {
+        "id": book.id,
+        "title": book.title,
+        "available_copies": book.available_copies,
+    }
+
+
 async def get_active_borrows_service(db: AsyncSession):
     return await BorrowRepository.get_active(db)
 

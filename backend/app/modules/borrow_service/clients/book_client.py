@@ -12,6 +12,7 @@ from tenacity import (
 
 from app.infrastructure.repositories.book_repository import BookRepository
 from app.modules.borrow_service.contracts.book_contract import BookContract
+from app.internal.circuit_breaker import CircuitBreaker
 
 
 INTERNAL_API_BASE_URL = os.getenv(
@@ -24,6 +25,10 @@ INTERNAL_API_TOKEN = os.getenv(
     "dev-internal-token",
 )
 
+book_service_circuit_breaker = CircuitBreaker(
+    failure_threshold=3,
+    recovery_timeout=10,
+)
 
 class BookClient:
 
@@ -34,28 +39,31 @@ class BookClient:
         """
         return await BookRepository.get_by_id(db, book_id)
 
-    async def get_book(
-        self,
-        db,
-        book_id: int,
-    ) -> BookContract | None:
-        try:
-            response = await self._fetch_book_from_internal_api(
-                book_id
+    async def get_book(self, db, book_id: int) -> BookContract | None:
+        if book_service_circuit_breaker.is_open():
+            raise HTTPException(
+                status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Book service circuit is open",
             )
+
+        try:
+            response = await self._fetch_book_from_internal_api(book_id)
 
             if response.status_code == 404:
                 return None
 
             response.raise_for_status()
+            book_service_circuit_breaker.record_success()
 
         except httpx.TimeoutException:
+            book_service_circuit_breaker.record_failure()
             raise HTTPException(
                 status_code=http_status.HTTP_504_GATEWAY_TIMEOUT,
                 detail="Book service timeout",
             )
 
         except httpx.RequestError:
+            book_service_circuit_breaker.record_failure()
             raise HTTPException(
                 status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Book service unavailable",

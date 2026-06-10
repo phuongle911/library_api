@@ -24,3 +24,55 @@ async def test_get_internal_book_without_token_returns_401(client, sample_book):
     )
 
     assert response.status_code == http_status.HTTP_401_UNAUTHORIZED
+
+
+async def test_reserve_book_internal_success(
+        client,
+        sample_book,
+):
+    response = await client.post(
+        f"/api/v1/internal/books/{sample_book.id}/reserve",
+        headers={"X-Internal-Token": "dev-internal-token"},
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["book_id"] == sample_book.id
+    assert data["available_copies"] == sample_book.available_copies
+
+async def test_reserve_book_internal_without_token_returns_401(
+        client,
+        sample_book,
+):
+    response = await client.post(
+        f"/api/v1/internal/books/{sample_book.id}/reserve"
+    )
+
+    assert response.status_code == 401
+
+async def test_reserve_book_internal_not_found(client):
+    response = await client.post(
+        "/api/v1/internal/books/99999/reserve",
+        headers={"X-Internal-Token": "dev-internal-token",},
+    )
+
+    assert response.status_code == 404
+
+async def test_reserve_book_internal_not_available(
+        client,
+        sample_book,
+):
+    sample_book.available_copies = 0
+
+    response = await client.post(
+        f"/api/v1/internal/books/{sample_book.id}/reserve",
+        headers={"X-Internal-Token": "dev-internal-token"},
+    )
+
+    assert response.status_code == 400
+    # assert response.json()["detail"] == "Book not available"
+    print(response.status_code)
+    print(response.json())
+

@@ -13,6 +13,7 @@ from tenacity import (
 from app.infrastructure.repositories.book_repository import BookRepository
 from app.modules.borrow_service.contracts.book_contract import BookContract
 from app.internal.circuit_breaker import CircuitBreaker
+from app.internal.auth_headers import get_internal_headers
 
 
 INTERNAL_API_BASE_URL = os.getenv(
@@ -95,9 +96,7 @@ class BookClient:
         async with httpx.AsyncClient(timeout=5.0) as client:
             return await client.get(
                 f"{INTERNAL_API_BASE_URL}/internal/books/{book_id}",
-                headers={
-                    "X-Internal-Token": INTERNAL_API_TOKEN,
-                },
+                headers=get_internal_headers()
             )
 
     async def reserve_book(
@@ -107,9 +106,7 @@ class BookClient:
         async with httpx.AsyncClient(timeout=5.0) as client:
             response = await client.post(
                 f"{INTERNAL_API_BASE_URL}/intrnal/books/{book_id}/reserve",
-                headers={
-                    "X-Internal-Token": INTERNAL_API_TOKEN,
-                },
+                headers=get_internal_headers()
             )
 
             response.raise_for_status()
@@ -123,9 +120,7 @@ class BookClient:
         async with httpx.AsyncClient(timeout=5.0) as client:
             response = await client.post(
                 f"{INTERNAL_API_BASE_URL}/internal/books/{book_id}/release",
-                headers={
-                    "X-Internal-Token": INTERNAL_API_TOKEN,
-                },
+                headers=get_internal_headers()
             )
 
             response.raise_for_status()

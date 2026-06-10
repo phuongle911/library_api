@@ -7,13 +7,13 @@ from app.modules.borrow_service.service import check_book_availability_service
 from app.modules.borrow_service.schemas import BorrowBookRequest, BorrowRecordResponse
 from app.modules.borrow_service.service import (
     return_book_service,
-    borrow_book_service,
     get_active_borrows_service,
     get_borrow_history_service,
     get_user_borrow_history_service,
     get_book_borrow_history_service,
 )
 from app.application.use_cases.borrow_book import BorrowBookUseCase
+from app.application.borrow_application_service import BorrowApplicationService
 
 borrow_router = APIRouter(prefix="/borrow", tags=["Borrow"])
 

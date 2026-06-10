@@ -17,6 +17,7 @@ from app.models.user import User
 from app.schemas.common import PaginatedResponse, BookOut
 from app.modules.borrow_service.contracts.book_contract import BookContract
 from app.modules.borrow_service.clients.book_client import INTERNAL_API_BASE_URL, INTERNAL_API_TOKEN
+from app.internal.auth_headers import get_internal_headers
 
 
 logger = logging.getLogger("app.books")
@@ -68,7 +69,7 @@ async def get_book(
         async with httpx.AsyncClient(timeout=5.0) as client:
             response = await client.get(
                 f"{INTERNAL_API_BASE_URL}/internal/books/{book_id}",
-                headers={"X-Internal-Token": INTERNAL_API_TOKEN},
+                headers=get_internal_headers(),
             )
 
             if response.status_code == 404:

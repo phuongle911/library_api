@@ -60,3 +60,26 @@ async def reserve_book_internal(
         "book_id": book.id,
         "available_copies": book.available_copies,
     }
+
+@internal_router.post("/{book_id}/release")
+async def release_book_intrnal(
+    book_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    book = await BookRepository.get_by_id(
+        db,
+        book_id,
+    )
+
+    if not book:
+        raise HTTPException(
+            status_code=404,
+            detail="Book not found",
+        )
+    
+    book.available_copies += 1
+
+    return {
+        "book_id": book.id,
+        "available_copies": book.available_copies,
+    }

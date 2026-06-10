@@ -115,3 +115,18 @@ class BookClient:
             response.raise_for_status()
 
             return response.json()
+
+    async def release_book(
+            self,
+            book_id: int,
+    ):
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.post(
+                f"{INTERNAL_API_BASE_URL}/internal/books/{book_id}/release",
+                headers={
+                    "X-Internal-Token": INTERNAL_API_TOKEN,
+                },
+            )
+
+            response.raise_for_status()
+            return response.json()

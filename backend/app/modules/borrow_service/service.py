@@ -219,7 +219,11 @@ async def return_book_service(
             )
         
         borrow_record.returned_at = datetime.now(timezone.utc)
-        book.available_copies += 1
+        book_client = BookClient()
+
+        await book_client.release_book(
+            book_id=borrow_record.book_id,
+        )
 
         response = {
             "borrow_record_id": str(borrow_record.id),

@@ -128,8 +128,7 @@ async def check_book_availability_service(
             ):
     book_client = BookClient()
     
-    book = await book_client.get_book(
-        db=db,
+    book = await book_client.reserve_book(
         book_id=book_id,
     )
 

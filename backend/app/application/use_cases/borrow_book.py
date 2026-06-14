@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.borrow_service.service import borrow_book_service
+from app.application.borrow_application_service import BorrowApplicationService
 
 
 class BorrowBookUseCase:
@@ -14,7 +14,7 @@ class BorrowBookUseCase:
             user_id: int,
             idempotency_key: str | None = None,
             ):
-        return await borrow_book_service(
+        return await BorrowApplicationService.borrow_book(
             db=self.db,
             book_id=book_id,
             user_id=user_id,

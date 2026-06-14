@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
+
 from fastapi import HTTPException
-from sqlalchemy.exc import IdentifierError, IntegrityError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status as http_status
 
@@ -13,7 +14,7 @@ from app.modules.borrow_service.repository import BorrowRepository
 
 
 class BorrowApplicationService:
-    
+
     @staticmethod
     async def borrow_book(
         db: AsyncSession,
@@ -22,15 +23,14 @@ class BorrowApplicationService:
         idempotency_key: str | None = None,
     ):
         try:
+            existing_key = None
+
             if idempotency_key:
-                existing_key = await IdempotencyDAO.get(
-                    db,
-                    idempotency_key
-                )
+                existing_key = await IdempotencyDAO.get(db, idempotency_key)
 
             if existing_key and existing_key.status == "completed":
                 return existing_key.response
-            
+
             async with db.begin():
                 idempotency_record = None
 
@@ -40,83 +40,77 @@ class BorrowApplicationService:
                         key=idempotency_key,
                     )
 
-                    book_client = BookClient()
-                    user_client = UserClient()
+                book_client = BookClient()
+                user_client = UserClient()
 
-                    book = await book_client.get_book_for_update(
+                book = await book_client.get_book_for_update(
+                    db=db,
+                    book_id=book_id,
+                )
+
+                if not await user_client.get_user(db, user_id):
+                    raise HTTPException(
+                        status_code=http_status.HTTP_400_BAD_REQUEST,
+                        detail="User not found",
+                    )
+
+                if not book:
+                    raise HTTPException(
+                        status_code=http_status.HTTP_400_BAD_REQUEST,
+                        detail="Book not found",
+                    )
+
+                active_borrow = await BorrowRepository.get_active_by_user_and_book(
+                    db=db,
+                    user_id=user_id,
+                    book_id=book_id,
+                )
+
+                try:
+                    BorrowDomainService.validate_can_borrow(
+                        active_borrow=active_borrow,
+                        book=book,
+                    )
+                except ValueError as e:
+                    raise HTTPException(
+                        status_code=http_status.HTTP_400_BAD_REQUEST,
+                        detail=str(e),
+                    )
+
+                await book_client.reserve_book(book_id=book_id)
+
+                borrow_record = await BorrowRepository.create(
+                    db=db,
+                    user_id=user_id,
+                    book_id=book_id,
+                )
+
+                response = {
+                    "borrow_record_id": str(borrow_record.id),
+                    "book_id": str(book_id),
+                    "user_id": str(user_id),
+                    "status": "borrowed",
+                }
+
+                await OutboxRepository.create(
+                    db=db,
+                    event_type="BookBorrowed",
+                    payload={
+                        "user_id": user_id,
+                        "book_id": book_id,
+                        "borrowed_at": datetime.now(timezone.utc).isoformat(),
+                    },
+                )
+
+                if idempotency_record:
+                    await IdempotencyDAO.mark_completed(
                         db=db,
-                        book_id=book_id,
+                        record=idempotency_record,
+                        response=response,
                     )
 
-                    if not await user_client.get_user(
-                        db,
-                        user_id,
-                    ):
-                        raise HTTPException(
-                            status_code=http_status.HTTP_400_BAD_REQUEST,
-                            detail="User not found",
-                        )
-                    
-                    if not book:
-                        raise HTTPException(
-                            status_code=http_status.HTTP_400_BAD_REQUEST,
-                            detail="Book not found",
-                        )
-                    
-                    active_borrow = await BorrowRepository.get_active_by_user_and_book(
-                        db=db,
-                        user_id=user_id,
-                        book_id=book_id,
-                    )
+                return response
 
-                    try:
-                        BorrowDomainService.validate_can_borrow(
-                            active_borrow=active_borrow,
-                            book=book,
-                        )
-
-                    except ValueError as e:
-                        raise HTTPException(
-                            status_code=http_status.HTTP_400_BAD_REQUEST,
-                            detail=str(e),
-                        )
-                    
-                    await book_client.reserve_book(
-                        book_id=book_id,
-                    )
-
-                    borrow_record = await BorrowRepository.create(
-                        db=db,
-                        user_id=user_id,
-                        book_id=book_id,
-                    )
-
-                    response = {
-                        "borrow_record_id": str(borrow_record.id),
-                        "book_id": str(book_id),
-                        "user_id": str(user_id),
-                        "status": "borrowed",
-                    }
-
-                    if idempotency_record:
-                        await IdempotencyDAO.mark_completed(
-                            db=db,
-                            record=idempotency_record,
-                            response=response,
-                        )
-
-                        await OutboxRepository.create(
-                            db=db,
-                            event_type="BookBorrowed",
-                            payload={
-                                "user_id": user_id,
-                                "book_id": book-id,
-                                "borrowed_at": datetime.now(timezone.utc).isoformat(),
-                            },
-                        )
-
-                        return response
-                    
         except IntegrityError:
             raise HTTPException(
                 status_code=http_status.HTTP_409_CONFLICT,

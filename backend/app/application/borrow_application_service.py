@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from uuid import uuid4
 
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
@@ -96,6 +97,7 @@ class BorrowApplicationService:
                     db=db,
                     event_type="BookBorrowed",
                     payload={
+                        "event_id": str(uuid4()),
                         "user_id": user_id,
                         "book_id": book_id,
                         "borrowed_at": datetime.now(timezone.utc).isoformat(),

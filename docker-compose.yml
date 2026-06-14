@@ -54,6 +54,26 @@ services:
       - backend-1
       - backend-2
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  outbox-consumer:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: python -m app.application.outbox_consumer
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/app_db
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
 
 volumes:
     postgres_data:

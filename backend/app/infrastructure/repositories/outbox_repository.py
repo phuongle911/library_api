@@ -18,11 +18,10 @@ class OutboxRepository:
         return event
 
     @staticmethod
-    async def get_unprocessed_events(db, limit: int = 10):
+    async def get_unprocessed(db, limit: int = 10):
         result = await db.execute(
             select(OutboxEvent)
             .where(OutboxEvent.processed_at.is_(None))
-            .order_by(OutboxEvent.created_at.asc())
             .limit(limit)
         )
         return result.scalars().all()
@@ -30,5 +29,4 @@ class OutboxRepository:
     @staticmethod
     async def mark_processed(db, event: OutboxEvent):
         event.processed_at = datetime.now(timezone.utc)
-        await db.flush()
-        return event
+        db.add(event)

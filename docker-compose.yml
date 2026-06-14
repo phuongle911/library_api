@@ -74,6 +74,17 @@ services:
       - redis
     restart: unless-stopped
 
+  audit-consumer:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: python -m app.application.audit_consumer
+    environment:
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+
 
 volumes:
     postgres_data:

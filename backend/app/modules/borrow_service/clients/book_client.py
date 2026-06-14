@@ -105,7 +105,7 @@ class BookClient:
     ):
         async with httpx.AsyncClient(timeout=5.0) as client:
             response = await client.post(
-                f"{INTERNAL_API_BASE_URL}/intrnal/books/{book_id}/reserve",
+                f"{INTERNAL_API_BASE_URL}/internal/books/{book_id}/reserve",
                 headers=get_internal_headers()
             )
 

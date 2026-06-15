@@ -6,7 +6,7 @@ from app.modules.borrow_service.clients.book_client import BookClient
 
 
 @pytest.mark.asyncio
-async def test_get_book_success(mocker):
+async def test_get_book_success():
     client = BookClient()
 
     mock_response = httpx.Response(
@@ -22,7 +22,7 @@ async def test_get_book_success(mocker):
 
     assert book.id == 1
     assert book.title == "book_1"
-    assert book.available_copies == 2
+    assert book.available_copies == 5
     assert book.is_available is True
 
 

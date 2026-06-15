@@ -9,7 +9,7 @@ from starlette import status as http_status
 from app.DAO.idempotency_dao import IdempotencyDAO
 from app.domain.services.borrow_domain_service import BorrowDomainService
 from app.infrastructure.repositories.outbox_repository import OutboxRepository
-from app.modules.borrow_service.clients.book_client import BookClient
+from app.grpc.book_grpc_client import BookGrpcClient
 from app.modules.borrow_service.clients.user_client import UserClient
 from app.modules.borrow_service.repository import BorrowRepository
 
@@ -41,13 +41,10 @@ class BorrowApplicationService:
                         key=idempotency_key,
                     )
 
-                book_client = BookClient()
+                book_client = BookGrpcClient()
                 user_client = UserClient()
 
-                book = await book_client.get_book_for_update(
-                    db=db,
-                    book_id=book_id,
-                )
+                book = await book_client.get_book(book_id)
 
                 if not await user_client.get_user(db, user_id):
                     raise HTTPException(
@@ -59,6 +56,20 @@ class BorrowApplicationService:
                     raise HTTPException(
                         status_code=http_status.HTTP_400_BAD_REQUEST,
                         detail="Book not found",
+                    )
+
+                if book.available_copies <= 0:
+                    raise HTTPException(
+                        status_code=http_status.HTTP_400_BAD_REQUEST,
+                        detail="Book is not available",
+                    )
+
+                reservation = await book_client.reserve_book(book_id=book_id)
+
+                if not reservation.success:
+                    raise HTTPException(
+                        status_code=http_status.HTTP_400_BAD_REQUEST,
+                        detail=reservation.message,
                     )
 
                 active_borrow = await BorrowRepository.get_active_by_user_and_book(
@@ -77,8 +88,6 @@ class BorrowApplicationService:
                         status_code=http_status.HTTP_400_BAD_REQUEST,
                         detail=str(e),
                     )
-
-                await book_client.reserve_book(book_id=book_id)
 
                 borrow_record = await BorrowRepository.create(
                     db=db,

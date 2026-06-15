@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package book;
+
+service BookService {
+    rpc GetBook (GetBookRequest) returns (BookResponse);
+    rpc ReserveBook (ReserveBookRequest) returns (ReserveBookResponse);
+}
+
+message GetBookRequest {int32 book_id = 1;}
+
+message BookResponse {
+    int32 id = 1;
+    string title =2;
+    int32 available_copies = 3;
+}
+
+message ReserveBookRequest {int32 book_id = 1;}
+
+message ReserveBookResponse {
+    bool success = 1;
+    string message = 2;
+}

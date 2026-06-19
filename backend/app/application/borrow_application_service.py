@@ -64,14 +64,6 @@ class BorrowApplicationService:
                         detail="Book is not available",
                     )
 
-                reservation = await book_client.reserve_book(book_id=book_id)
-
-                if not reservation.success:
-                    raise HTTPException(
-                        status_code=http_status.HTTP_400_BAD_REQUEST,
-                        detail=reservation.message,
-                    )
-
                 active_borrow = await BorrowRepository.get_active_by_user_and_book(
                     db=db,
                     user_id=user_id,
@@ -89,11 +81,35 @@ class BorrowApplicationService:
                         detail=str(e),
                     )
 
-                borrow_record = await BorrowRepository.create(
-                    db=db,
-                    user_id=user_id,
-                    book_id=book_id,
-                )
+                reservation = await book_client.reserve_book(book_id=book_id)
+
+                if not reservation.success:
+                    raise HTTPException(
+                        status_code=http_status.HTTP_400_BAD_REQUEST,
+                        detail=reservation.message,
+                    )
+
+                try:
+                    borrow_record = await BorrowRepository.create(
+                        db=db,
+                        user_id=user_id,
+                        book_id=book_id,
+                    )
+
+                    confirm_response = await book_client.confirm_reservation(
+                        book_id=book_id,
+                    )
+
+                    if not confirm_response.success:
+                        await book_client.cancel_reservation(book_id=book_id)
+                        raise HTTPException(
+                            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=confirm_response.message,
+                        )
+
+                except Exception:
+                    await book_client.cancel_reservation(book_id=book_id)
+                    raise
 
                 response = {
                     "borrow_record_id": str(borrow_record.id),

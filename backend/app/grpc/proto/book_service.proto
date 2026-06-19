@@ -5,6 +5,8 @@ package book;
 service BookService {
     rpc GetBook (GetBookRequest) returns (BookResponse);
     rpc ReserveBook (ReserveBookRequest) returns (ReserveBookResponse);
+    rpc ConfirmReservation (ConfirmReservationRequest) returns (ReservationResponse);
+    rpc CancelReservation (CancelReservationRequest) returns (ReservationResponse);
 }
 
 message GetBookRequest {int32 book_id = 1;}
@@ -18,6 +20,19 @@ message BookResponse {
 message ReserveBookRequest {int32 book_id = 1;}
 
 message ReserveBookResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message ConfirmReservationRequest {
+    int32 book_id = 1;
+}
+
+message CancelReservationRequest {
+    int32 book_id = 1;
+}
+
+message ReservationResponse {
     bool success = 1;
     string message = 2;
 }

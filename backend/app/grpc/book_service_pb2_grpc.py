@@ -3,7 +3,9 @@
 import grpc
 import warnings
 
-from app.grpc import book__service__pb2 as book__service__pb2
+import book_service_pb2 as book__service__pb2
+
+from app.grpc import book_service_pb2 as book__service__pb2
 
 GRPC_GENERATED_VERSION = '1.71.2'
 GRPC_VERSION = grpc.__version__
@@ -44,6 +46,16 @@ class BookServiceStub(object):
                 request_serializer=book__service__pb2.ReserveBookRequest.SerializeToString,
                 response_deserializer=book__service__pb2.ReserveBookResponse.FromString,
                 _registered_method=True)
+        self.ConfirmReservation = channel.unary_unary(
+                '/book.BookService/ConfirmReservation',
+                request_serializer=book__service__pb2.ConfirmReservationRequest.SerializeToString,
+                response_deserializer=book__service__pb2.ReservationResponse.FromString,
+                _registered_method=True)
+        self.CancelReservation = channel.unary_unary(
+                '/book.BookService/CancelReservation',
+                request_serializer=book__service__pb2.CancelReservationRequest.SerializeToString,
+                response_deserializer=book__service__pb2.ReservationResponse.FromString,
+                _registered_method=True)
 
 
 class BookServiceServicer(object):
@@ -61,6 +73,18 @@ class BookServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ConfirmReservation(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CancelReservation(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_BookServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -73,6 +97,16 @@ def add_BookServiceServicer_to_server(servicer, server):
                     servicer.ReserveBook,
                     request_deserializer=book__service__pb2.ReserveBookRequest.FromString,
                     response_serializer=book__service__pb2.ReserveBookResponse.SerializeToString,
+            ),
+            'ConfirmReservation': grpc.unary_unary_rpc_method_handler(
+                    servicer.ConfirmReservation,
+                    request_deserializer=book__service__pb2.ConfirmReservationRequest.FromString,
+                    response_serializer=book__service__pb2.ReservationResponse.SerializeToString,
+            ),
+            'CancelReservation': grpc.unary_unary_rpc_method_handler(
+                    servicer.CancelReservation,
+                    request_deserializer=book__service__pb2.CancelReservationRequest.FromString,
+                    response_serializer=book__service__pb2.ReservationResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -129,6 +163,60 @@ class BookService(object):
             '/book.BookService/ReserveBook',
             book__service__pb2.ReserveBookRequest.SerializeToString,
             book__service__pb2.ReserveBookResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ConfirmReservation(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/book.BookService/ConfirmReservation',
+            book__service__pb2.ConfirmReservationRequest.SerializeToString,
+            book__service__pb2.ReservationResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CancelReservation(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/book.BookService/CancelReservation',
+            book__service__pb2.CancelReservationRequest.SerializeToString,
+            book__service__pb2.ReservationResponse.FromString,
             options,
             channel_credentials,
             insecure,

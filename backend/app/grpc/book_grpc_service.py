@@ -1,11 +1,12 @@
 import grpc
 from app.grpc import book__service__pb2
-from grpcc import aio
+from grpc import aio
 
+from app.grpc import book_service_pb2
 from app.grpc import book_service_pb2_grpc
 
 
-class BookService(book_sservice_pb2_grpc.BookServiceServicer):
+class BookService(book_service_pb2_grpc.BookServiceServicer):
     async def GetBook(self, request, context):
         return book__service__pb2.BookResponse(
             id=request.book_id,
@@ -31,3 +32,15 @@ class BookService(book_sservice_pb2_grpc.BookServiceServicer):
         print("Book gRBC server running on port 50051")
 
         await server.wait_for_termination()
+
+    async def ConfirmReservation(self, request, context):
+        return book__service__pb2.ReservationResponse(
+            success=True,
+            message="Reservation confirmed",
+        )
+    
+    async def CancelReservation(self, request, context):
+        return book__service__pb2.ReservationResponse(
+            success=True,
+            message="Reservation cancelled",
+        )

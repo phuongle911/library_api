@@ -1,8 +1,5 @@
 import grpc
 
-from app.grpc import (
-    book__service__pb2 as book_service_pb2, book_service_pb2_grpc,
-)
 from app.grpc import book_service_pb2
 from app.grpc import book_service_pb2_grpc
 

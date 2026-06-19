@@ -27,6 +27,20 @@ class FakeBookGrpcClient:
 
         return Reservation()
 
+    async def confirm_reservation(self, book_id: int):
+        class Response:
+            success = True
+            message = "Reservation confirmed"
+
+        return Response()
+    
+    async def cancel_reservation(self, book_id: int):
+        class Response:
+            success = True
+            message = "Reservation cancelled"
+
+        return Response()
+
 
 class FakeBorrowRecord:
     id = 1

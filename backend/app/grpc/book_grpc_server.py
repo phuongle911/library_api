@@ -1,7 +1,7 @@
 import grpc
 from grpc import aio
 
-from app.grpc import book__service__pb2
+from app.grpc import book_service_pb2 as book__service__pb2
 from app.grpc import book_service_pb2_grpc
 
 

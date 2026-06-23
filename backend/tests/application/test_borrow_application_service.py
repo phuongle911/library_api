@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime, timezone
 
 from app.application.borrow_application_service import BorrowApplicationService
 
@@ -44,6 +45,9 @@ class FakeBookGrpcClient:
 
 class FakeBorrowRecord:
     id = 1
+    status = "borrowed"
+    borrowed_at = datetime.now(timezone.utc)
+    returned_at = None
 
 
 class FakeBorrowRepository:

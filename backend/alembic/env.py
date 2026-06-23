@@ -16,8 +16,8 @@ from app.models.borrow_record import BorrowRecord
 from app.models.refresh_token import RefreshToken
 from app.models.idempotency_key import IdempotencyKey
 from app.models.job import Job
-from app.models.outbox_events import OutboxEvent
-
+from app.models.outbox_event import OutboxEvent
+from app.models.borrow_history_read_model import BorrowHistoryReadModel
 
 config = context.config
 

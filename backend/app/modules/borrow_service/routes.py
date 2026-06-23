@@ -14,6 +14,7 @@ from app.modules.borrow_service.service import (
 )
 from app.application.use_cases.borrow_book import BorrowBookUseCase
 from app.application.borrow_application_service import BorrowApplicationService
+from app.application.get_borrow_history_service import GetBorrowHistoryService
 
 borrow_router = APIRouter(prefix="/borrow", tags=["Borrow"])
 
@@ -111,3 +112,14 @@ async def check_book_availability(
     db: AsyncSession = Depends(get_read_db),
 ):
     return await check_book_availability_service(db=db, book_id=book_id)
+
+
+@borrow_router.get("/users/{user_id}/borrow-history")
+async def get_borrow_history(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    return await GetBorrowHistoryService.execute(
+        db=db,
+        user_id=user_id,
+    )

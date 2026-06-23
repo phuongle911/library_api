@@ -1,0 +1,9 @@
+from enum import Enum
+
+
+class BorrowSagaStatus(str, Enum):
+    STARTED = "STARTED"
+    BOOK_RESERVED = "BOOK_RESERVED"
+    BORROW_CREATED = "BORROW_CREATED"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"

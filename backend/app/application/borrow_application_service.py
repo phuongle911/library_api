@@ -12,6 +12,9 @@ from app.infrastructure.repositories.outbox_repository import OutboxRepository
 from app.grpc.book_grpc_client import BookGrpcClient
 from app.modules.borrow_service.clients.user_client import UserClient
 from app.modules.borrow_service.repository import BorrowRepository
+from app.domain.entities.borrow_saga import BorrowSagaStatus
+from app.infrastructure.repositories.borrow_saga_repository import BorrowSagaRepository
+from app.infrastructure.repositories.borrow_history_read_repository import BorrowHistoryReadRepository
 
 
 class BorrowApplicationService:
@@ -40,6 +43,13 @@ class BorrowApplicationService:
                         db=db,
                         key=idempotency_key,
                     )
+                
+                saga = await BorrowSagaRepository.create(
+                    db=db,
+                    user_id=user_id,
+                    book_id=book_id,
+                    status=BorrowSagaStatus.STARTED,
+                )
 
                 book_client = BookGrpcClient()
                 user_client = UserClient()
@@ -88,12 +98,34 @@ class BorrowApplicationService:
                         status_code=http_status.HTTP_400_BAD_REQUEST,
                         detail=reservation.message,
                     )
+                
+                await BorrowSagaRepository.update_status(
+                    db=db,
+                    saga=saga,
+                    status=BorrowSagaStatus.BOOK_RESERVED,
+                )
 
                 try:
                     borrow_record = await BorrowRepository.create(
                         db=db,
                         user_id=user_id,
                         book_id=book_id,
+                    )
+
+                    await BorrowSagaRepository.update_status(
+                        db=db,
+                        saga=saga,
+                        status=BorrowSagaStatus.BORROW_CREATED,
+                    )
+
+                    await BorrowHistoryReadRepository.create(
+                        db=db,
+                        borrow_record_id=borrow_record.id,
+                        user_id=user_id,
+                        book_id=book_id,
+                        book_title=book.title,
+                        borrow_status=borrow_record.status,
+                        borrowed_at=borrow_record.borrowed_at,
                     )
 
                     confirm_response = await book_client.confirm_reservation(

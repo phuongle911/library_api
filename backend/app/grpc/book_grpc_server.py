@@ -31,3 +31,15 @@ class BookService(book_service_pb2_grpc.BookServiceServicer):
         print("Book gRBC server running on port 50051")
 
         await server.wait_for_termination()
+
+    async def ConfirmReservation(self, request, context):
+        return book__service__pb2.ReservationResponse(
+            success=True,
+            message="Reservation confirmed",
+        )
+    
+    async def CancelReservation(self, request, context):
+        return book__service__pb2.ReservationResponse(
+            success=True,
+            message="Reservation canclled",
+        )

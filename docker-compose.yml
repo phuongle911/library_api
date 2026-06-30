@@ -10,13 +10,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-
   backend-1:
+    image: library-app-backend
     build:
       context: ./backend
       dockerfile: Dockerfile
     depends_on:
-      - db  
+      - db
     volumes:
       - ./backend:/app
     environment:
@@ -26,14 +26,14 @@ services:
     env_file:
       - .env
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-
 
   backend-2:
+    image: library-app-backend
     build:
       context: ./backend
       dockerfile: Dockerfile
     depends_on:
-      - db  
+      - db
     volumes:
       - ./backend:/app
     environment:
@@ -43,7 +43,7 @@ services:
     env_file:
       - .env
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-  
+
   nginx:
     build:
       context: ./nginx
@@ -62,6 +62,7 @@ services:
     restart: unless-stopped
 
   outbox-consumer:
+    image: library-app-backend
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -75,6 +76,7 @@ services:
     restart: unless-stopped
 
   audit-consumer:
+    image: library-app-backend
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -85,6 +87,5 @@ services:
       - redis
     restart: unless-stopped
 
-
 volumes:
-    postgres_data:
+  postgres_data:

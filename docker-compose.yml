@@ -1,3 +1,9 @@
+x-backend-image: &backend-image
+  image: library-app-backend
+  build:
+    context: ./backend
+    dockerfile: Dockerfile
+
 services:
   db:
     image: postgres:16
@@ -11,10 +17,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   backend-1:
-    image: library-app-backend
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    <<: *backend-image
     depends_on:
       - db
     volumes:
@@ -28,10 +31,7 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   backend-2:
-    image: library-app-backend
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    <<: *backend-image
     depends_on:
       - db
     volumes:
@@ -62,10 +62,7 @@ services:
     restart: unless-stopped
 
   outbox-consumer:
-    image: library-app-backend
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    <<: *backend-image
     command: python -m app.application.outbox_consumer
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/app_db
@@ -76,10 +73,7 @@ services:
     restart: unless-stopped
 
   audit-consumer:
-    image: library-app-backend
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    <<: *backend-image
     command: python -m app.application.audit_consumer
     environment:
       REDIS_URL: redis://redis:6379

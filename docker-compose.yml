@@ -95,5 +95,17 @@ services:
       - redis
     restart: unless-stopped
 
+  book-grpc:
+    image: library-app-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: python -m app.grpc.run_book_grpc_server
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/app_db
+    depends_on:
+      - db
+    restart: unless-stopped
+
 volumes:
   postgres_data:

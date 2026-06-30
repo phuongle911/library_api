@@ -14,7 +14,7 @@ from app.modules.borrow_service.clients.user_client import UserClient
 from app.modules.borrow_service.repository import BorrowRepository
 from app.domain.entities.borrow_saga import BorrowSagaStatus
 from app.infrastructure.repositories.borrow_saga_repository import BorrowSagaRepository
-from app.infrastructure.repositories.borrow_history_read_repository import BorrowHistoryReadRepository
+#from app.infrastructure.repositories.borrow_history_read_repository import BorrowHistoryReadRepository
 
 
 class BorrowApplicationService:
@@ -118,15 +118,15 @@ class BorrowApplicationService:
                         status=BorrowSagaStatus.BORROW_CREATED,
                     )
 
-                    await BorrowHistoryReadRepository.create(
-                        db=db,
-                        borrow_record_id=borrow_record.id,
-                        user_id=user_id,
-                        book_id=book_id,
-                        book_title=book.title,
-                        borrow_status=borrow_record.status,
-                        borrowed_at=borrow_record.borrowed_at,
-                    )
+                    # adRepository.create(
+                    #     db=db,
+                    #     borrow_record_id=borrow_record.id,
+                    #     user_id=user_id,
+                    #     book_id=book_id,
+                    #     book_title=book.title,
+                    #     borrow_status=borrow_record.status,
+                    #     borroawait BorrowHistoryRewed_at=borrow_record.borrowed_at,
+                    # )
 
                     confirm_response = await book_client.confirm_reservation(
                         book_id=book_id,
@@ -155,9 +155,12 @@ class BorrowApplicationService:
                     event_type="BookBorrowed",
                     payload={
                         "event_id": str(uuid4()),
+                        "borrow_record_id": borrow_record.id,
                         "user_id": user_id,
                         "book_id": book_id,
-                        "borrowed_at": datetime.now(timezone.utc).isoformat(),
+                        "book_title": book.title,
+                        "status": borrow_record.status,
+                        "borrowed_at": borrow_record.borrowed_at.isoformat(),
                     },
                 )
 

@@ -1,13 +1,17 @@
 import asyncio
 import json
-import redis.asyncio as redis
 from datetime import datetime
 
+import redis.asyncio as redis
+
 from app.core.database import AsyncSessionLocal
-from app.infrastructure.repositories.borrow_history_read_repository import BorrowHistoryReadRepository
+from app.infrastructure.repositories.borrow_history_read_repository import (
+    BorrowHistoryReadRepository,
+)
+
 
 REDIS_URL = "redis://redis:6379"
-CHANNEL_NAME = "domain_events"
+CHANNEL_NAME = "library_events"
 
 
 async def handle_book_borrowed(payload: dict):
@@ -18,7 +22,7 @@ async def handle_book_borrowed(payload: dict):
                 borrow_record_id=payload["borrow_record_id"],
                 user_id=payload["user_id"],
                 book_id=payload["book_id"],
-                book_title=payload["book-title"],
+                book_title=payload["book_title"],
                 borrow_status=payload["status"],
                 borrowed_at=datetime.fromisoformat(payload["borrowed_at"]),
             )
@@ -34,15 +38,15 @@ async def main():
 
     pubsub = redis_client.pubsub()
 
-    pubsub.subcribe(CHANNEL_NAME)
+    await pubsub.subscribe(CHANNEL_NAME)
 
     async for message in pubsub.listen():
         if message["type"] != "message":
             continue
-        
+
         event = json.loads(message["data"])
 
-        if event["event_type"]  ==  "BookBorrowed":
+        if event["event_type"] == "BookBorrowed":
             await handle_book_borrowed(event["payload"])
 
 

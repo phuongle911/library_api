@@ -43,3 +43,29 @@ class BorrowHistoryReadRepository:
         )
 
         return result.scalars().all()
+
+    @staticmethod
+    async def get_by_borrow_record_id(
+        db: AsyncSession,
+        borrow_record_id: int,
+    ):
+        result = await db.execute(
+            select(BorrowHistoryReadModel)
+            .where(BorrowHistoryReadModel.borrow_record_id == borrow_record_id)
+        )
+    
+        return result.scalar_one_or_none()
+
+    @staticmethod
+    async def update_status(
+        db: AsyncSession,
+        read_model: BorrowHistoryReadModel,
+        status: str,
+        returned_at=None,
+    ):
+        read_model.borrow_status = status
+        read_model.returned_at = returned_at
+
+        await db.flush()
+
+        return read_model

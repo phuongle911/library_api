@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -5,7 +7,7 @@ from app.models.borrow_saga import BorrowSaga
 
 
 class BorrowSagaRepository:
-    
+
     @staticmethod
     async def create(
         db: AsyncSession,
@@ -23,7 +25,7 @@ class BorrowSagaRepository:
         await db.flush()
 
         return saga
-    
+
     @staticmethod
     async def update_status(
         db: AsyncSession,
@@ -31,11 +33,43 @@ class BorrowSagaRepository:
         status: str,
     ):
         saga.status = status
+        await db.flush()
+        return saga
+
+    @staticmethod
+    async def mark_completed(
+        db: AsyncSession,
+        saga: BorrowSaga,
+    ):
+        saga.status = "COMPLETED"
+        saga.completed_at = datetime.now(timezone.utc)
+        saga.last_error = None
 
         await db.flush()
-
         return saga
-    
+
+    @staticmethod
+    async def mark_failed(
+        db: AsyncSession,
+        saga: BorrowSaga,
+        error: str,
+    ):
+        saga.status = "FAILED"
+        saga.last_error = error
+
+        await db.flush()
+        return saga
+
+    @staticmethod
+    async def increment_retry(
+        db: AsyncSession,
+        saga: BorrowSaga,
+    ):
+        saga.retry_count += 1
+
+        await db.flush()
+        return saga
+
     @staticmethod
     async def get_by_id(
         db: AsyncSession,
@@ -47,8 +81,8 @@ class BorrowSagaRepository:
             )
         )
 
-        return result.scaler_one_or_none()
-    
+        return result.scalar_one_or_none()
+
     @staticmethod
     async def get_by_status(
         db: AsyncSession,

@@ -22,3 +22,16 @@ class BorrowSaga(Base):
         onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
+    retry_count = Column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+    last_error = Column(
+        String,
+        nullable=True,
+    )
+    completed_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+    )

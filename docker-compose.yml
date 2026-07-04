@@ -44,6 +44,20 @@ services:
       - .env
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    depends_on:
+      - nginx
+
   nginx:
     build:
       context: ./nginx
@@ -73,10 +87,7 @@ services:
     restart: unless-stopped
 
   read-model-consumer:
-    image: library-app-backend
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    <<: *backend-image
     command: python -m app.application.read_model_consumer
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/app_db
@@ -85,7 +96,7 @@ services:
       - db
       - redis
     restart: unless-stopped
-    
+
   audit-consumer:
     <<: *backend-image
     command: python -m app.application.audit_consumer
@@ -96,10 +107,7 @@ services:
     restart: unless-stopped
 
   book-grpc:
-    image: library-app-backend
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    <<: *backend-image
     command: python -m app.grpc.run_book_grpc_server
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/app_db

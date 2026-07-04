@@ -95,3 +95,25 @@ class BorrowSagaRepository:
         )
 
         return result.scalars().all()
+
+    @staticmethod
+    async def mark_timeout(
+        db: AsyncSession,
+        saga: BorrowSaga,
+        error:str,
+    ):
+        saga.status = "TIMEOUT"
+        saga.last_error = error
+
+        await db.flush()
+        return saga
+    
+    @staticmethod
+    async def mark_compensated(
+        db: AsyncSession,
+        saga: BorrowSaga,
+    ):
+        saga.status = "COMPENSATED"
+
+        await db.flush()
+        return saga

@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -7,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status as http_status
 
 from app.DAO.idempotency_dao import IdempotencyDAO
+from app.core.decorator.retry import retry_async
 from app.domain.entities.borrow_saga import BorrowSagaStatus
 from app.domain.services.borrow_domain_service import BorrowDomainService
 from app.grpc.book_grpc_client import BookGrpcClient
@@ -15,6 +17,7 @@ from app.infrastructure.repositories.outbox_repository import OutboxRepository
 from app.modules.borrow_service.clients.user_client import UserClient
 from app.modules.borrow_service.repository import BorrowRepository
 
+logger = logging.getLogger(__name__)
 
 class BorrowApplicationService:
 
@@ -48,6 +51,15 @@ class BorrowApplicationService:
                     user_id=user_id,
                     book_id=book_id,
                     status=BorrowSagaStatus.STARTED,
+                )
+
+                logger.info(
+                    "Borrow saga started",
+                    extra={
+                        "saga_id": saga.id,
+                        "user_id": user_id,
+                        "book_id": book-id,
+                    },
                 )
 
                 book_client = BookGrpcClient()
@@ -104,6 +116,14 @@ class BorrowApplicationService:
                     status=BorrowSagaStatus.BOOK_RESERVED,
                 )
 
+                logger.info(
+                    "Borrow saga borrow record created",
+                    extra={
+                        "saga_id": saga.id,
+                        "borrow_record_id": borrow_record.id,
+                    },
+                )
+
                 try:
                     borrow_record = await BorrowRepository.create(
                         db=db,
@@ -117,57 +137,98 @@ class BorrowApplicationService:
                         status=BorrowSagaStatus.BORROW_CREATED,
                     )
 
-                    max_retries = 3
+                    logger.info(
+                    "Borrow saga borrow record created",
+                    extra={
+                        "saga_id": saga.id,
+                        "borrow_record_id": borrow_record.id,
+                    },
+                    
+                    )
 
-                    for attempt in range(max_retries):
-                        try:
-                            confirm_response = await book_client.confirm_reservation(
-                                book_id=book_id,
-                            )
+                    try:
+                        await BorrowApplicationService.confirm_reservation_with_retry(
+                            book_client=book_client,
+                            book_id=book_id,
+                        )
 
-                            if confirm_response.success:
-                                break
+                    except Exception as exc:
+                        await BorrowSagaRepository.increment_retry(
+                            db=db,
+                            saga=saga,
+                        )
 
-                            raise Exception(confirm_response.message)
+                        await BorrowSagaRepository.mark_failed(
+                            db=db,
+                            saga=saga,
+                            error=str(exc),
+                        )
 
-                        except Exception as exc:
-                            await BorrowSagaRepository.increment_retry(
-                                db=db,
-                                saga=saga,
-                            )
+                        logger.exception(
+                            "Borrow saga failed", extra={
+                                "saga_id": saga.id,
+                            }
+                        )
 
-                            if attempt == max_retries - 1:
-                                await BorrowSagaRepository.mark_failed(
-                                    db=db,
-                                    saga=saga,
-                                    error=str(exc),
-                                )
+                        await book_client.cancel_reservation(
+                            book_id=book_id,
+                        )
 
-                                await book_client.cancel_reservation(
-                                    book_id=book_id,
-                                )
+                        await BorrowSagaRepository.mark_compensated(
+                            db=db,
+                            saga=saga,
+                        )
 
-                                raise HTTPException(
-                                    status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                    detail=str(exc),
-                                )
+                        logger.info(
+                            "Borrow saga completed",
+                            extra={
+                                "saga_id": saga.id,
+                            },
+                        )
+
+                        raise HTTPException(
+                            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=str(exc),
+                        )
 
                     await BorrowSagaRepository.mark_completed(
                         db=db,
                         saga=saga,
                     )
 
+                    logger.info(
+                            "Borrow saga completed",
+                            extra={
+                                "saga_id": saga.id,
+                            },
+                        )
+
                 except HTTPException:
                     raise
 
                 except Exception as exc:
-                    await book_client.cancel_reservation(book_id=book_id)
+                    try:
+                        await book_client.cancel_reservation(book_id=book_id)
 
-                    await BorrowSagaRepository.mark_failed(
-                        db=db,
-                        saga=saga,
-                        error=str(exc),
-                    )
+                        await BorrowSagaRepository.mark_compensated(
+                            db=db,
+                            saga=saga,
+                        )
+
+                    except Exception as compensation_exc:
+                        await BorrowSagaRepository.mark_failed(
+                            db=db,
+                            saga=saga,
+                            error=f"Original error: {exc}. Compensation failed: {compensation_exc}",
+                        )
+
+                        logger.exception(
+                            "Borrow saga failed", extra={
+                                "saga_id": saga.id,
+                            }
+                        )
+
+                        raise
 
                     raise
 
@@ -206,3 +267,13 @@ class BorrowApplicationService:
                 status_code=http_status.HTTP_409_CONFLICT,
                 detail="Borrow request conflicts with existing data",
             )
+
+    @staticmethod
+    @retry_async(attempts=3, delay_seconds=0.5)
+    async def confirm_reservation_with_retry(book_client, book_id: int):
+        response = await book_client.confirm_reservation(book_id=book_id)
+
+        if not response.success:
+            raise Exception(response.message)
+
+        return response

@@ -7,3 +7,5 @@ class BorrowSagaStatus(str, Enum):
     BORROW_CREATED = "BORROW_CREATED"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
+    TIMEOUT = "TIMEOUT"
+    COMPENSATED = "COMPENSATED"

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter} from "next/navigation";
 import { useState } from "react";
 import { loginUser, saveToken } from "@/services/auth";
 import "./login.css";
@@ -9,6 +10,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("phuong123");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const router = useRouter();
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -18,6 +20,7 @@ export default function LoginPage() {
       setLoading(true);
       const response = await loginUser({ email, password });
       saveToken(response.access_token);
+      router.push("/books");
       alert("Login successful!");
     } catch (error) {
       console.error(error);

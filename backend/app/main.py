@@ -16,6 +16,7 @@ from app.modules.borrow_service.routes import borrow_router
 from app.modules.book_service.internal_router import internal_router
 from app.routers.job import job_router
 from app.routers.health import health_router
+from app.modules.borrow_service.reservation_router import reservation_router
 # from app.core.logging import setup_logging
 from app.core.logging_config import setup_logging
 from app.core.request_id import set_request_id, generate_request_id, get_request_id
@@ -70,7 +71,7 @@ app.include_router(borrow_router, prefix="/api/v1")
 app.include_router(job_router, prefix="/api/v1")
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(internal_router, prefix="/api/v1")
-
+app.include_router(reservation_router, prefix="/api/v1")
 
 @app.middleware("http")
 async def add_request_id_middleware(request: Request, call_next):

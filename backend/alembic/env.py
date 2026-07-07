@@ -18,6 +18,7 @@ from app.models.idempotency_key import IdempotencyKey
 from app.models.job import Job
 from app.models.outbox_event import OutboxEvent
 from app.models.borrow_history_read_model import BorrowHistoryReadModel
+from app.models.reservation import Reservation
 
 config = context.config
 

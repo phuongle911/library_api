@@ -5,6 +5,6 @@ from sqlalchemy.exc import SQLAlchemyError
 async def commit_or_rollback(db: AsyncSession):
     try:
         await db.commit()
-    except SQLAlchemyError as exc:
+    except SQLAlchemyError:
         await db.rollback()
         raise

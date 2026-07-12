@@ -77,7 +77,6 @@ async def worker_loop():
                 
             job = await JobDAO.get_next_runnable_job(db)
 
-
             if job:
                 try:
                     await asyncio.wait_for(process_job(job, db), timeout=30,)

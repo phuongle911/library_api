@@ -9,7 +9,7 @@ from app.modules.borrow_service.clients.book_client import BookClient
 async def test_get_book_success():
     client = BookClient()
 
-    mock_response = httpx.Response(
+    httpx.Response(
         status_code=200,
         json={
             "id": 1,

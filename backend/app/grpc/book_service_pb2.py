@@ -21,30 +21,27 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 
 _sym_db = _symbol_database.Default()
 
-
-
-
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12\x62ook_service.proto\x12\x04\x62ook\"!\n\x0eGetBookRequest\x12\x0f\n\x07\x62ook_id\x18\x01 \x01(\x05\"C\n\x0c\x42ookResponse\x12\n\n\x02id\x18\x01 \x01(\x05\x12\r\n\x05title\x18\x02 \x01(\t\x12\x18\n\x10\x61vailable_copies\x18\x03 \x01(\x05\"%\n\x12ReserveBookRequest\x12\x0f\n\x07\x62ook_id\x18\x01 \x01(\x05\"7\n\x13ReserveBookResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\",\n\x19\x43onfirmReservationRequest\x12\x0f\n\x07\x62ook_id\x18\x01 \x01(\x05\"+\n\x18\x43\x61ncelReservationRequest\x12\x0f\n\x07\x62ook_id\x18\x01 \x01(\x05\"7\n\x13ReservationResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t2\xa8\x02\n\x0b\x42ookService\x12\x33\n\x07GetBook\x12\x14.book.GetBookRequest\x1a\x12.book.BookResponse\x12\x42\n\x0bReserveBook\x12\x18.book.ReserveBookRequest\x1a\x19.book.ReserveBookResponse\x12P\n\x12\x43onfirmReservation\x12\x1f.book.ConfirmReservationRequest\x1a\x19.book.ReservationResponse\x12N\n\x11\x43\x61ncelReservation\x12\x1e.book.CancelReservationRequest\x1a\x19.book.ReservationResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'book_service_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-  DESCRIPTOR._loaded_options = None
-  _globals['_GETBOOKREQUEST']._serialized_start=28
-  _globals['_GETBOOKREQUEST']._serialized_end=61
-  _globals['_BOOKRESPONSE']._serialized_start=63
-  _globals['_BOOKRESPONSE']._serialized_end=130
-  _globals['_RESERVEBOOKREQUEST']._serialized_start=132
-  _globals['_RESERVEBOOKREQUEST']._serialized_end=169
-  _globals['_RESERVEBOOKRESPONSE']._serialized_start=171
-  _globals['_RESERVEBOOKRESPONSE']._serialized_end=226
-  _globals['_CONFIRMRESERVATIONREQUEST']._serialized_start=228
-  _globals['_CONFIRMRESERVATIONREQUEST']._serialized_end=272
-  _globals['_CANCELRESERVATIONREQUEST']._serialized_start=274
-  _globals['_CANCELRESERVATIONREQUEST']._serialized_end=317
-  _globals['_RESERVATIONRESPONSE']._serialized_start=319
-  _globals['_RESERVATIONRESPONSE']._serialized_end=374
-  _globals['_BOOKSERVICE']._serialized_start=377
-  _globals['_BOOKSERVICE']._serialized_end=673
+    DESCRIPTOR._loaded_options = None
+_globals['_GETBOOKREQUEST']._serialized_start = 28
+_globals['_GETBOOKREQUEST']._serialized_end = 61
+_globals['_BOOKRESPONSE']._serialized_start = 63
+_globals['_BOOKRESPONSE']._serialized_end = 130
+_globals['_RESERVEBOOKREQUEST']._serialized_start = 132
+_globals['_RESERVEBOOKREQUEST']._serialized_end = 169
+_globals['_RESERVEBOOKRESPONSE']._serialized_start = 171
+_globals['_RESERVEBOOKRESPONSE']._serialized_end = 226
+_globals['_CONFIRMRESERVATIONREQUEST']._serialized_start = 228
+_globals['_CONFIRMRESERVATIONREQUEST']._serialized_end = 272
+_globals['_CANCELRESERVATIONREQUEST']._serialized_start = 274
+_globals['_CANCELRESERVATIONREQUEST']._serialized_end = 317
+_globals['_RESERVATIONRESPONSE']._serialized_start = 319
+_globals['_RESERVATIONRESPONSE']._serialized_end = 374
+_globals['_BOOKSERVICE']._serialized_start = 377
+_globals['_BOOKSERVICE']._serialized_end = 673
 # @@protoc_insertion_point(module_scope)

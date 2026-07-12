@@ -6,4 +6,3 @@ class BookBorrowed:
     user_id: int
     book_id: int
     borrowed_at: datetime
-    

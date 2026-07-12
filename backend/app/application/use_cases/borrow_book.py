@@ -20,5 +20,3 @@ class BorrowBookUseCase:
             user_id=user_id,
             idempotency_key=idempotency_key,
         )
-    
-

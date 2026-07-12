@@ -1,4 +1,4 @@
 [flake8]
 max-line-length = 88
 execute = __pycache__,env,alembic,migrations
-extend-ignore = E203, W503, F401, E122, E128, E302, W293, E501, W291
+extend-ignore = E203, W503, F401, E122, E128, E302, W293, E501, W291, E111

@@ -27,21 +27,21 @@ _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'book_service_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-    DESCRIPTOR._loaded_options = None
-_globals['_GETBOOKREQUEST']._serialized_start = 28
-_globals['_GETBOOKREQUEST']._serialized_end = 61
-_globals['_BOOKRESPONSE']._serialized_start = 63
-_globals['_BOOKRESPONSE']._serialized_end = 130
-_globals['_RESERVEBOOKREQUEST']._serialized_start = 132
-_globals['_RESERVEBOOKREQUEST']._serialized_end = 169
-_globals['_RESERVEBOOKRESPONSE']._serialized_start = 171
-_globals['_RESERVEBOOKRESPONSE']._serialized_end = 226
-_globals['_CONFIRMRESERVATIONREQUEST']._serialized_start = 228
-_globals['_CONFIRMRESERVATIONREQUEST']._serialized_end = 272
-_globals['_CANCELRESERVATIONREQUEST']._serialized_start = 274
-_globals['_CANCELRESERVATIONREQUEST']._serialized_end = 317
-_globals['_RESERVATIONRESPONSE']._serialized_start = 319
-_globals['_RESERVATIONRESPONSE']._serialized_end = 374
-_globals['_BOOKSERVICE']._serialized_start = 377
-_globals['_BOOKSERVICE']._serialized_end = 673
+  DESCRIPTOR._loaded_options = None
+  _globals['_GETBOOKREQUEST']._serialized_start = 28
+  _globals['_GETBOOKREQUEST']._serialized_end = 61
+  _globals['_BOOKRESPONSE']._serialized_start = 63
+  _globals['_BOOKRESPONSE']._serialized_end = 130
+  _globals['_RESERVEBOOKREQUEST']._serialized_start = 132
+  _globals['_RESERVEBOOKREQUEST']._serialized_end = 169
+  _globals['_RESERVEBOOKRESPONSE']._serialized_start = 171
+  _globals['_RESERVEBOOKRESPONSE']._serialized_end = 226
+  _globals['_CONFIRMRESERVATIONREQUEST']._serialized_start = 228
+  _globals['_CONFIRMRESERVATIONREQUEST']._serialized_end = 272
+  _globals['_CANCELRESERVATIONREQUEST']._serialized_start = 274
+  _globals['_CANCELRESERVATIONREQUEST']._serialized_end = 317
+  _globals['_RESERVATIONRESPONSE']._serialized_start = 319
+  _globals['_RESERVATIONRESPONSE']._serialized_end = 374
+  _globals['_BOOKSERVICE']._serialized_start = 377
+  _globals['_BOOKSERVICE']._serialized_end = 673
 # @@protoc_insertion_point(module_scope)

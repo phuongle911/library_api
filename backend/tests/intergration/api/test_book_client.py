@@ -6,23 +6,33 @@ from app.modules.borrow_service.clients.book_client import BookClient
 
 
 @pytest.mark.asyncio
-async def test_get_book_success():
+async def test_get_book_success(mocker):
     client = BookClient()
 
-    httpx.Response(
+    mock_response = httpx.Response(
         status_code=200,
         json={
             "id": 1,
             "title": "Clean Code",
             "available_copies": 3,
         },
+        request=httpx.Request(
+            method="GET",
+            url="http://test/internal/books/1",
+        ),
+    )
+
+    mocker.patch.object(
+        client,
+        "_fetch_book_from_internal_api",
+        return_value=mock_response,
     )
 
     book = await client.get_book(db=None, book_id=1)
 
     assert book.id == 1
-    assert book.title == "book_1"
-    assert book.available_copies == 5
+    assert book.title == "Clean Code"
+    assert book.available_copies == 3
     assert book.is_available is True
 
 
@@ -30,7 +40,13 @@ async def test_get_book_success():
 async def test_get_book_not_found(mocker):
     client = BookClient()
 
-    mock_response = httpx.Response(status_code=404)
+    mock_response = httpx.Response(
+        status_code=404,
+        request=httpx.Request(
+            method="GET",
+            url="http://test/internal/books/999",
+        ),
+    )
 
     mocker.patch.object(
         client,
@@ -44,7 +60,7 @@ async def test_get_book_not_found(mocker):
 
 
 @pytest.mark.asyncio
-async def test_get_book_seervice_unavailable(mocker):
+async def test_get_book_service_unavailable(mocker):
     client = BookClient()
 
     mocker.patch.object(
@@ -56,8 +72,8 @@ async def test_get_book_seervice_unavailable(mocker):
     with pytest.raises(HTTPException) as exc:
         await client.get_book(db=None, book_id=1)
 
-        assert exc.value.status_code == 503
-        assert exc.value.detail == "Book service unavailable"
+    assert exc.value.status_code == 503
+    assert exc.value.detail == "Book service unavailable"
 
 
 @pytest.mark.asyncio
@@ -73,5 +89,5 @@ async def test_get_book_timeout(mocker):
     with pytest.raises(HTTPException) as exc:
         await client.get_book(db=None, book_id=1)
 
-        assert exc.value.status_code == 504
-        assert exc.value.detail == "Book service timeout"
+    assert exc.value.status_code == 504
+    assert exc.value.detail == "Book service timeout"

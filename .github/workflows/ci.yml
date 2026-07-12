@@ -15,17 +15,21 @@ jobs:
       run:
         working-directory: backend
 
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
+      TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
+
     services:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test_db
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready"
+          --health-cmd="pg_isready -U postgres -d test_db"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -50,7 +54,5 @@ jobs:
           flake8 .
 
       - name: Run tests
-        env:
-          DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test_db
         run: |
           pytest

@@ -55,7 +55,7 @@ async def test_reserve_book_internal_without_token_returns_401(
 async def test_reserve_book_internal_not_found(client):
     response = await client.post(
         "/api/v1/internal/books/99999/reserve",
-        headers={"X-Internal-Token": "dev-internal-token",},
+        headers={"X-Internal-Token": "dev-internal-token", },
     )
 
     assert response.status_code == 404

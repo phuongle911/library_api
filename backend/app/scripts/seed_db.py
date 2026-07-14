@@ -56,7 +56,7 @@ async def seed():
             await session.flush()
 
             for book in books:
-                borrow = BorrowRecord(
+                BorrowRecord(
                     user_id=user.id,
                     book_id=book.id,
                     status="borrowed",  # important field

@@ -58,7 +58,7 @@ class BorrowApplicationService:
                     extra={
                         "saga_id": saga.id,
                         "user_id": user_id,
-                        "book_id": book-id,
+                        "book_id": book_id,
                     },
                 )
 
@@ -116,14 +116,6 @@ class BorrowApplicationService:
                     status=BorrowSagaStatus.BOOK_RESERVED,
                 )
 
-                logger.info(
-                    "Borrow saga borrow record created",
-                    extra={
-                        "saga_id": saga.id,
-                        "borrow_record_id": borrow_record.id,
-                    },
-                )
-
                 try:
                     borrow_record = await BorrowRepository.create(
                         db=db,
@@ -135,15 +127,6 @@ class BorrowApplicationService:
                         db=db,
                         saga=saga,
                         status=BorrowSagaStatus.BORROW_CREATED,
-                    )
-
-                    logger.info(
-                    "Borrow saga borrow record created",
-                    extra={
-                        "saga_id": saga.id,
-                        "borrow_record_id": borrow_record.id,
-                    },
-                    
                     )
 
                     try:

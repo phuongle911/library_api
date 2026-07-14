@@ -187,20 +187,6 @@ def set_execute_first(db, first_value):
 
 
 @pytest.fixture
-async def sample_book(async_session):
-    book = Book(
-        title="Clean Code",
-        available_copies=3,
-    )
-
-    async_session.add(book)
-    await async_session.commit()
-    await async_session.refresh(book)
-
-    return book
-
-
-@pytest.fixture
 async def sample_category(async_session):
     category = Category(name="Programming")
 

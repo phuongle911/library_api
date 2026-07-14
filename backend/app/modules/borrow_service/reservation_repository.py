@@ -45,8 +45,7 @@ class ReservationRepository:
     ) -> list[Reservation]:
         result = await self.db.execute(
             select(Reservation).where(
-                Reservation.user_id == user_id)
-                .order_by(Reservation.created_at.desc())
+                Reservation.user_id == user_id).order_by(Reservation.created_at.desc())
             )
         
         return list(result.scalars().all())

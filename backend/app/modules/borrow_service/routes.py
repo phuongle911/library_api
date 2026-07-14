@@ -41,7 +41,7 @@ async def get_active_borrows(db: AsyncSession = Depends(get_read_db)):
 
 
 @borrow_router.get("/history", response_model=list[BorrowRecordResponse])
-async def get_borrow_history(
+async def get_list_borrow_history(
     status: Literal["borrowed_at", "returned_at"] | None = None,
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),

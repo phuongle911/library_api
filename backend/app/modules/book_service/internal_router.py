@@ -9,7 +9,7 @@ from app.internal.auth import verify_internal_token
 
 internal_router = APIRouter(
     prefix="/internal/books", tags=["Internal Books"],
-    dependencies = [Depends(verify_internal_token)],
+    dependencies=[Depends(verify_internal_token)],
     )
 
 @internal_router.get("/{book_id}")

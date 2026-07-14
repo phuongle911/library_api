@@ -100,7 +100,7 @@ class BorrowSagaRepository:
     async def mark_timeout(
         db: AsyncSession,
         saga: BorrowSaga,
-        error:str,
+        error: str,
     ):
         saga.status = "TIMEOUT"
         saga.last_error = error

@@ -13,7 +13,15 @@ export default function BooksPage() {
     async function loadBooks() {
       try {
         const data = await getBooks();
-        setBooks(data);
+        if (Array.isArray(data)) {
+          setBooks(data);
+        } else if (Array.isArray(data.items)) {
+          setBooks(data.items);
+        } else if (Array.isArray(data.books)) {
+          setBooks(data.books);
+        } else {
+          setBooks([]);
+        }
       } catch (error) {
         console.error(error);
         setError("Failed to load books.");

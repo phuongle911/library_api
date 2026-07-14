@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     SENTRY_DNS: str = "https://abc123@o123456.ingest.sentry.io/987654"
     APP_ENV: str = "development"
     SQL_ECHO: bool = False
+    RESERVATION_ENABLED: bool = False
 
     class Config:
         env_file = ".env"

@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.modules.borrow_service.reservation_application_service import ReservationApplicationService
 from app.modules.borrow_service.reservation_repository import ReservationRepository
@@ -24,6 +25,10 @@ async def reserve_book(
     current_user=Depends(get_current_user),
     service: ReservationApplicationService = Depends(get_reservation_service),
 ):
+    if not settings.RESERVATION_ENABLED:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Reservation feature is disabled",
+        )
 
     return await service.reserve_book(
         user_id=current_user.id,

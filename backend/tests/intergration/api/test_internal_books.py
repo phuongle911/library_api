@@ -1,13 +1,19 @@
+import os
 from starlette import status as http_status
 
 
 async def test_get_internal_book_sucess(
-        client,
-        sample_book,
+    client,
+    sample_book,
 ):
+    internal_token = os.getenv(
+        "INTERNAL_API_TOKEN",
+        "dev-internal-token",
+    )
+
     response = await client.get(
         f"/api/v1/internal/books/{sample_book.id}",
-        headers={"X-Internal-Token": "dev-internal-token"},
+        headers={"X-Internal-Token": internal_token},
     )
 
     assert response.status_code == http_status.HTTP_200_OK

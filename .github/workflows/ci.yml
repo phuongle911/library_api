@@ -5,11 +5,24 @@ on:
     branches:
       - main
       - develop
+
   pull_request:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
+    name: Lint and test backend
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     defaults:
       run:
@@ -18,10 +31,13 @@ jobs:
     env:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
       TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
+      SECRET_KEY: test-secret-key
+      ALGORITHM: HS256
+      INTERNAL_API_TOKEN: test-internal-token
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres:16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -42,17 +58,42 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Run database migrations
+        run: alembic upgrade head
+
       - name: Run lint
-        run: |
-          pip install flake8
-          flake8 .
+        run: flake8 .
 
       - name: Run tests
-        run: |
-          pytest
+        run: pytest -v --disable-warnings --maxfail=1
+
+  docker-build:
+    name: Validate backend Docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: library-app-backend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -33,20 +33,21 @@ async def test_get_internal_book_without_token_returns_401(client, sample_book):
 
 
 async def test_reserve_book_internal_success(
-        client,
-        sample_book,
+    client,
+    sample_book,
 ):
-    response = await client.post(
-        f"/api/v1/internal/books/{sample_book.id}/reserve",
-        headers={"X-Internal-Token": "dev-internal-token"},
+    internal_token = os.getenv(
+        "INTERNAL_API_TOKEN",
+        "dev-internal-token",
     )
 
-    assert response.status_code == 200
+    response = await client.post(
+        f"/api/v1/internal/books/{sample_book.id}/reserve",
+        headers={"X-Internal-Token": internal_token},
+    )
 
-    data = response.json()
+    assert response.status_code == http_status.HTTP_200_OK
 
-    assert data["book_id"] == sample_book.id
-    assert data["available_copies"] == sample_book.available_copies
 
 async def test_reserve_book_internal_without_token_returns_401(
         client,

@@ -25,7 +25,7 @@ async def expire_old_reservations() -> None:
                 )
             )
         await db.commit()
-        logger.info( "expired pending reservations",
+        logger.info("expired pending reservations",
                     extra={"expired_count" : result.rowcount},)
         
 

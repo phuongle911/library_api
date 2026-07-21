@@ -1,13 +1,10 @@
 x-backend-service: &backend-service
-  image: library-app-backend:${IMAGE_TAG:-latest}
-  build:
-    context: ./backend
-    dockerfile: Dockerfile
+  image: ${ECR_REGISTRY}/library-api-backend:${IMAGE_TAG:-latest}
   env_file:
     - .env.production
   environment:
     DATABASE_URL: ${DATABASE_URL}
-    REDIS_URL: redis://redis:6379
+    REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
     INTERNAL_API_BASE_URL: http://nginx/api/v1
     INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
     WEB_CONCURRENCY: ${WEB_CONCURRENCY:-2}
@@ -27,20 +24,25 @@ x-backend-healthcheck: &backend-healthcheck
     interval: 30s
     timeout: 10s
     retries: 3
-    start_period: 20s
+    start_period: 30s
 
 services:
   db:
     image: postgres:16-alpine
+    container_name: library-api-db
     restart: unless-stopped
+
     env_file:
       - .env.production
+
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
     healthcheck:
       test:
         [
@@ -51,20 +53,25 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
     networks:
       - library-network
 
   redis:
     image: redis:7-alpine
+    container_name: library-api-redis
     restart: unless-stopped
+
     command:
       - redis-server
       - --appendonly
       - "yes"
       - --requirepass
       - ${REDIS_PASSWORD}
+
     volumes:
       - redis_data:/data
+
     healthcheck:
       test:
         [
@@ -75,11 +82,14 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
     networks:
       - library-network
 
   backend-1:
     <<: [*backend-service, *backend-healthcheck]
+    container_name: library-api-backend-1
+
     depends_on:
       db:
         condition: service_healthy
@@ -88,6 +98,8 @@ services:
 
   backend-2:
     <<: [*backend-service, *backend-healthcheck]
+    container_name: library-api-backend-2
+
     depends_on:
       db:
         condition: service_healthy
@@ -96,10 +108,15 @@ services:
 
   book-grpc:
     <<: *backend-service
+    container_name: library-api-book-grpc
+
     command: python -m app.grpc.run_book_grpc_server
+
     environment:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
+
     depends_on:
       db:
         condition: service_healthy
@@ -108,10 +125,15 @@ services:
 
   outbox-consumer:
     <<: *backend-service
+    container_name: library-api-outbox-consumer
+
     command: python -m app.application.outbox_consumer
+
     environment:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
+
     depends_on:
       db:
         condition: service_healthy
@@ -120,10 +142,15 @@ services:
 
   read-model-consumer:
     <<: *backend-service
+    container_name: library-api-read-model-consumer
+
     command: python -m app.application.read_model_consumer
+
     environment:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
+
     depends_on:
       db:
         condition: service_healthy
@@ -132,26 +159,35 @@ services:
 
   audit-consumer:
     <<: *backend-service
+    container_name: library-api-audit-consumer
+
     command: python -m app.application.audit_consumer
+
     environment:
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
+
     depends_on:
       redis:
         condition: service_healthy
 
   nginx:
-    image: library-app-nginx:${IMAGE_TAG:-latest}
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
+    image: nginx:1.27-alpine
+    container_name: library-api-nginx
     restart: unless-stopped
+
     ports:
       - "8000:80"
+
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+
     depends_on:
       backend-1:
         condition: service_healthy
       backend-2:
         condition: service_healthy
+
     healthcheck:
       test:
         [
@@ -162,23 +198,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-    networks:
-      - library-network
 
-  frontend:
-    image: library-app-frontend:${IMAGE_TAG:-latest}
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-      NODE_ENV: production
-    ports:
-      - "3000:3000"
-    depends_on:
-      nginx:
-        condition: service_healthy
     networks:
       - library-network
 

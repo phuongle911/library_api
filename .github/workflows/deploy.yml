@@ -82,14 +82,31 @@ jobs:
               commands: [
                 "set -e",
                 "cd /opt/library-api",
+
                 "export IMAGE_TAG=\($image_tag)",
                 "export AWS_REGION=\($aws_region)",
                 "export ECR_REGISTRY=\($ecr_registry)",
+
+                "echo \"Logging in to Amazon ECR...\"",
                 "aws ecr get-login-password --region \($aws_region) | docker login --username AWS --password-stdin \($ecr_registry)",
+
+                "echo \"Pulling production images...\"",
                 "docker compose --env-file .env.production -f docker-compose.prod.yml pull",
-                "docker compose --env-file .env.production -f docker-compose.prod.yml up -d --remove-orphans",
-                "docker image prune -f",
-                "for i in $(seq 1 12); do if curl -fsS http://localhost:8000/api/v1/health; then exit 0; fi; echo \"Waiting for backend... attempt $i/12\"; sleep 5; done; echo \"Health check failed\"; docker compose --env-file .env.production -f docker-compose.prod.yml ps; docker logs library-api-backend --tail 100; exit 1"
+
+                "echo \"Starting PostgreSQL...\"",
+                "docker compose --env-file .env.production -f docker-compose.prod.yml up -d db",
+
+                "echo \"Waiting for PostgreSQL to become healthy...\"",
+                "for i in $(seq 1 12); do DB_STATUS=$(docker inspect --format=\"{{.State.Health.Status}}\" library-api-db 2>/dev/null || true); if [ \"$DB_STATUS\" = \"healthy\" ]; then echo \"PostgreSQL is healthy\"; break; fi; if [ \"$i\" -eq 12 ]; then echo \"PostgreSQL failed to become healthy\"; docker logs library-api-db --tail 100; exit 1; fi; echo \"Waiting for PostgreSQL... attempt $i/12\"; sleep 5; done",
+
+                "echo \"Running Alembic migrations...\"",
+                "docker compose --env-file .env.production -f docker-compose.prod.yml run --rm backend alembic upgrade head",
+
+                "echo \"Starting backend...\"",
+                "docker compose --env-file .env.production -f docker-compose.prod.yml up -d backend --remove-orphans",
+
+                "echo \"Waiting for backend health check...\"",
+                "for i in $(seq 1 12); do if curl -fsS http://localhost:8000/api/v1/health; then echo \"Backend is healthy\"; exit 0; fi; echo \"Waiting for backend... attempt $i/12\"; sleep 5; done; echo \"Backend health check failed\"; docker compose --env-file .env.production -f docker-compose.prod.yml ps; docker logs library-api-backend --tail 100; exit 1"
               ]
             }')
 
@@ -135,3 +152,13 @@ jobs:
           fi
 
           echo "Production deployment completed successfully."
+
+      - name: Deployment summary
+        if: success()
+        run: |
+          echo "## Production Deployment Successful" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Image tag: \`${IMAGE_TAG}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Database migrations: completed" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Backend health check: passed" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Region: \`${AWS_REGION}\`" >> "$GITHUB_STEP_SUMMARY"

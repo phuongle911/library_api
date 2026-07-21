@@ -1,16 +1,21 @@
 x-backend-service: &backend-service
   image: ${ECR_REGISTRY}/library-api-backend:${IMAGE_TAG:-latest}
+
   env_file:
     - .env.production
+
   environment:
     DATABASE_URL: ${DATABASE_URL}
     REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
     INTERNAL_API_BASE_URL: http://nginx/api/v1
     INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
     WEB_CONCURRENCY: ${WEB_CONCURRENCY:-2}
+
   restart: unless-stopped
+
   networks:
     - library-network
+
 
 x-backend-healthcheck: &backend-healthcheck
   healthcheck:
@@ -19,12 +24,13 @@ x-backend-healthcheck: &backend-healthcheck
         "CMD",
         "python",
         "-c",
-        "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"
+        "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health', timeout=5)"
       ]
     interval: 30s
     timeout: 10s
     retries: 3
     start_period: 30s
+
 
 services:
   db:
@@ -57,6 +63,7 @@ services:
     networks:
       - library-network
 
+
   redis:
     image: redis:7-alpine
     container_name: library-api-redis
@@ -86,6 +93,7 @@ services:
     networks:
       - library-network
 
+
   backend-1:
     <<: [*backend-service, *backend-healthcheck]
     container_name: library-api-backend-1
@@ -95,6 +103,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
 
   backend-2:
     <<: [*backend-service, *backend-healthcheck]
@@ -106,22 +115,19 @@ services:
       redis:
         condition: service_healthy
 
+
   book-grpc:
     <<: *backend-service
     container_name: library-api-book-grpc
 
     command: python -m app.grpc.run_book_grpc_server
 
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
-      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
-
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
+
 
   outbox-consumer:
     <<: *backend-service
@@ -129,16 +135,12 @@ services:
 
     command: python -m app.application.outbox_consumer
 
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
-      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
-
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
+
 
   read-model-consumer:
     <<: *backend-service
@@ -146,16 +148,12 @@ services:
 
     command: python -m app.application.read_model_consumer
 
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
-      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
-
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
+
 
   audit-consumer:
     <<: *backend-service
@@ -163,13 +161,23 @@ services:
 
     command: python -m app.application.audit_consumer
 
-    environment:
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
-      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
-
     depends_on:
       redis:
         condition: service_healthy
+
+
+  scheduler:
+    <<: *backend-service
+    container_name: library-api-scheduler
+
+    command: python -m app.application.scheduled_jobs
+
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 
   nginx:
     image: nginx:1.27-alpine
@@ -202,9 +210,11 @@ services:
     networks:
       - library-network
 
+
 networks:
   library-network:
     driver: bridge
+
 
 volumes:
   postgres_data:

@@ -70,43 +70,68 @@ jobs:
         env:
           EC2_INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
         run: |
+          ECR_REGISTRY="$(aws sts get-caller-identity \
+            --query Account \
+            --output text).dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+          PARAMETERS=$(jq -n \
+            --arg image_tag "$IMAGE_TAG" \
+            --arg aws_region "$AWS_REGION" \
+            --arg ecr_registry "$ECR_REGISTRY" \
+            '{
+              commands: [
+                "set -e",
+                "cd /opt/library-api",
+                "export IMAGE_TAG=\($image_tag)",
+                "export AWS_REGION=\($aws_region)",
+                "export ECR_REGISTRY=\($ecr_registry)",
+                "aws ecr get-login-password --region \($aws_region) | docker login --username AWS --password-stdin \($ecr_registry)",
+                "docker compose --env-file .env.production -f docker-compose.prod.yml pull",
+                "docker compose --env-file .env.production -f docker-compose.prod.yml up -d --remove-orphans",
+                "docker image prune -f",
+                "for i in $(seq 1 12); do if curl -fsS http://localhost:8000/api/v1/health; then exit 0; fi; echo \"Waiting for backend... attempt $i/12\"; sleep 5; done; echo \"Health check failed\"; docker compose --env-file .env.production -f docker-compose.prod.yml ps; docker logs library-api-backend --tail 100; exit 1"
+              ]
+            }')
+
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$EC2_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy library API commit $IMAGE_TAG" \
-            --parameters commands="[
-              \"set -e\",
-              \"cd /opt/library-api\",
-
-              \"export IMAGE_TAG=$IMAGE_TAG\",
-              \"export AWS_REGION=$AWS_REGION\",
-              \"export ECR_REGISTRY=$(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_REGION.amazonaws.com\",
-
-              \"aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin \$ECR_REGISTRY\",
-
-              \"docker compose -f docker-compose.prod.yml pull\",
-              \"docker compose -f docker-compose.prod.yml up -d --remove-orphans\",
-
-              \"docker image prune -f\",
-
-              \"sleep 15\",
-
-              \"curl --fail http://localhost:8000/health\"
-            ]" \
+            --parameters "$PARAMETERS" \
             --query "Command.CommandId" \
             --output text)
 
           echo "SSM Command ID: $COMMAND_ID"
 
+          set +e
+
           aws ssm wait command-executed \
             --command-id "$COMMAND_ID" \
             --instance-id "$EC2_INSTANCE_ID"
+
+          WAITER_EXIT_CODE=$?
+
+          set -e
 
           aws ssm get-command-invocation \
             --command-id "$COMMAND_ID" \
             --instance-id "$EC2_INSTANCE_ID" \
             --query '{
               Status:Status,
+              ResponseCode:ResponseCode,
               Output:StandardOutputContent,
               Error:StandardErrorContent
             }'
+
+          STATUS=$(aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$EC2_INSTANCE_ID" \
+            --query "Status" \
+            --output text)
+
+          if [ "$WAITER_EXIT_CODE" -ne 0 ] || [ "$STATUS" != "Success" ]; then
+            echo "Production deployment failed with status: $STATUS"
+            exit 1
+          fi
+
+          echo "Production deployment completed successfully."
